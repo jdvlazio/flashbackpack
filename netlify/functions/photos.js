@@ -6,8 +6,7 @@ exports.handler = async (event) => {
   const cloud = process.env.CLOUDINARY_CLOUD || 'deb88gq1x';
   const creds = Buffer.from(key + ':' + secret).toString('base64');
   try {
-    // Listar por asset_folder (Fixed Folder system de Cloudinary)
-    const url = 'https://api.cloudinary.com/v1_1/' + cloud + '/resources/image?asset_folder=' + encodeURIComponent(folder) + '&max_results=200';
+    const url = 'https://api.cloudinary.com/v1_1/' + cloud + '/resources/by_asset_folder?asset_folder=' + encodeURIComponent(folder) + '&max_results=200';
     const res = await fetch(url, { headers: { 'Authorization': 'Basic ' + creds } });
     const data = await res.json();
     if (data.error) throw new Error(JSON.stringify(data.error));
