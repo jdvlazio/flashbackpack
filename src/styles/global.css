@@ -22,8 +22,9 @@ body {
 @media (max-width: 768px) {
   /* Main container: stack vertically on mobile */
   #main-layout { flex-direction: column !important; height: auto !important; }
-  /* Map: fixed height on top */
-  #map-wrapper { min-height: 45vh !important; height: 45vh !important; flex: none !important; }
+  /* Map: fixed height, movido ARRIBA del pasaporte (order) — es el elemento estrella.
+     Solo reordena visualmente; el orden del DOM y el layout desktop no cambian. */
+  #map-wrapper { min-height: 45vh !important; height: 45vh !important; flex: none !important; order: -1 !important; }
   #flashback-map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
   /* Sidebar: full width below map, horizontal scrolling grid */
   #sidebar { width: 100% !important; border-right: none !important; border-top: 1px solid rgba(255,255,255,0.06) !important; overflow-y: visible !important; }
