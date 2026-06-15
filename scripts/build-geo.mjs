@@ -25,7 +25,10 @@ const fixCoords = (type, coords) =>
 const topo = await (await fetch(SRC)).json()
 const geo = feature(topo, topo.objects.countries)
 geo.features.forEach(f => {
-  const id = String(f.id).padStart(3, '0') // ISO 3166-1 numérico, 3 dígitos
+  // ISO 3166-1 numérico, 3 dígitos. Algunos territorios disputados (Kosovo,
+  // Chipre del Norte, Somalilandia) no tienen ISO en el dataset: iso = null
+  // (se pintan como tierra, nunca se resaltan) en vez del literal "undefined".
+  const id = f.id == null ? null : String(f.id).padStart(3, '0')
   f.id = id
   f.properties = { ...(f.properties || {}), iso: id }
   if (f.geometry) f.geometry.coordinates = fixCoords(f.geometry.type, f.geometry.coordinates)
