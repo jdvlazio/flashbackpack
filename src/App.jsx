@@ -18,19 +18,19 @@ export default function App() {
     loadPhotos(active.id).then(setPhotos)
   }, [active])
 
-  // Handler de teclado portado VERBATIM del baseline, incluido su deps `[]`.
-  // (Las flechas de teclado son no-op por closure obsoleto de `photos` — known issue
-  //  preservado; las flechas en pantalla del Lightbox sí funcionan.)
+  // Atajos de teclado. Depende de `photos`/`lightbox` para navegar sobre la
+  // lista actual (el baseline tenía deps `[]` y las flechas eran no-op).
+  // Escape cierra por capas: primero el lightbox, si no, la galería — así el
+  // foco se restaura por niveles (foto → pasaporte).
   useEffect(() => {
     const handler = e => {
-      if (e.key === 'Escape') { setActive(null); setLightbox(null) }
+      if (e.key === 'Escape') { if (lightbox) setLightbox(null); else setActive(null) }
       if (e.key === 'ArrowRight') { setLightbox(prev => { if (!prev) return prev; const i = photos.indexOf(prev); return i < photos.length - 1 ? photos[i + 1] : prev }) }
       if (e.key === 'ArrowLeft') { setLightbox(prev => { if (!prev) return prev; const i = photos.indexOf(prev); return i > 0 ? photos[i - 1] : prev }) }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [photos, lightbox])
 
   useWorldMap(wrapRef, setActive)
 
