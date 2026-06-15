@@ -123,13 +123,14 @@ export function useWorldMap(wrapRef, onSelect) {
         if (ctry) onSelect({ id: num, country: ctry })
       })
 
-      // Ya recoloreado: asegurar dimensionado correcto y revelar con fundido.
-      clearTimeout(revealFallback)
+      // Ya recoloreado: asegurar dimensionado y revelar SOLO cuando el primer
+      // frame recoloreado esté pintado ("idle") — garantiza que el flash de
+      // color de demotiles nunca es visible.
       map.resize()
-      el.style.opacity = '1'
+      map.once('idle', () => { clearTimeout(revealFallback); el.style.opacity = '1' })
     })
 
-    return () => { clearTimeout(revealFallback); ro.disconnect(); map.remove() }
+    return () => { clearTimeout(revealFallback); ro.disconnect(); resetBtn.remove(); tooltip.remove(); map.remove() }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 }
