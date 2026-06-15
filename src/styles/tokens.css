@@ -7,13 +7,18 @@
   --bg-map: #0a0a0a;
   --fg: #f5f5f7;
 
-  /* Escala de grises de texto (de más claro a más tenue) */
-  --c-muted:   #98989d;
-  --c-muted-2: #86868b;
-  --c-muted-3: #6e6e73;
-  --c-muted-4: #636366;
-  --c-dim:     #424245;
-  --c-dim-2:   #3a3a3c;
+  /* Escala de grises de texto (de más claro a más tenue).
+     Subida para máxima legibilidad — todos pasan WCAG AA sobre negro
+     con holgura, conservando jerarquía visual. */
+  --c-muted:   #c7c7cc;  /* ~12:1 */
+  --c-muted-2: #b8b8bd;  /* ~10:1 */
+  --c-muted-3: #a8a8ad;  /* ~7.8:1 */
+  --c-muted-4: #9a9a9f;  /* ~6.2:1 */
+  --c-dim:     #909095;  /* ~5.4:1 */
+  --c-dim-2:   #8a8a8f;  /* ~4.9:1 */
+
+  /* Color del logo "BACK" (dim deliberado = identidad de marca, no texto a leer) */
+  --wordmark-back: #3a3a3c;
 
   /* Líneas / bordes */
   --line:        rgba(255,255,255,0.06);
