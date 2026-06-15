@@ -1,0 +1,45 @@
+/* Estilos globales — portados verbatim del baseline (Web/index.html <style>). */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
+
+#flashback-map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+.maplibregl-ctrl-attrib, .maplibregl-ctrl-logo { display: none !important; }
+.maplibregl-ctrl-group { background: rgba(6,10,20,0.8) !important; border: 1px solid rgba(237,229,221,0.15) !important; }
+.maplibregl-ctrl-group button { background: none !important; border-bottom: 1px solid rgba(237,229,221,0.1) !important; }
+.maplibregl-ctrl-icon { filter: invert(1) opacity(0.6); }
+
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 768px) {
+  /* Main container: stack vertically on mobile */
+  #main-layout { flex-direction: column !important; height: auto !important; }
+  /* Map: fixed height on top */
+  #map-wrapper { min-height: 45vh !important; height: 45vh !important; flex: none !important; }
+  #flashback-map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+  /* Sidebar: full width below map, horizontal scrolling grid */
+  #sidebar { width: 100% !important; border-right: none !important; border-top: 1px solid rgba(255,255,255,0.06) !important; overflow-y: visible !important; }
+  /* Header compact on mobile */
+  header { padding: 1.2rem 1rem 0.8rem !important; }
+  /* Gallery modal: single column on mobile */
+  .gallery-grid { columns: 2 !important; }
+  /* Lightbox arrows: bigger touch targets on mobile */
+  .lb-arrow { width: 52px !important; height: 52px !important; }
+  /* Sidebar grid: 4 columns on mobile too but smaller */
+  .passport-grid { grid-template-columns: repeat(4, 1fr) !important; }
+}
+@media (max-width: 480px) {
+  .passport-grid { grid-template-columns: repeat(4, 1fr) !important; }
+}
+
+@media (max-width: 768px) {
+  .lb-img { max-width: 92vw !important; max-height: 82vh !important; }
+}
