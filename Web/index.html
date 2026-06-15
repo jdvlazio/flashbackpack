@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FLASHBACKPACK — Juan David Villa</title>
+<meta name="description" content="Fotografía móvil · 38 países"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#000;color:#EDE5DD;font-family:'Inter',system-ui,sans-serif;overflow-x:hidden}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#000}
+::-webkit-scrollbar-thumb{background:#222;border-radius:3px}
+
+#flashback-map{width:100%;height:440px;}
+.maplibregl-ctrl-attrib,.maplibregl-ctrl-logo{display:none!important;}
+.maplibregl-ctrl-group{background:rgba(6,10,20,0.8)!important;border:1px solid rgba(237,229,221,0.15)!important;}
+.maplibregl-ctrl-group button{background:none!important;border-bottom:1px solid rgba(237,229,221,0.1)!important;}
+.maplibregl-ctrl-icon{filter:invert(1) opacity(0.6);}
+
+@keyframes fadeIn{from{opacity:0;transform:scale(0.97)}to{opacity:1;transform:scale(1)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+</style>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css"/>
+<script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const {useState, useEffect, useRef} = React;
+
+const PROFILE = {
+  name: "Juan David Villa",
+  totalPhotos: 807,
+};
+
+const VISITED = [
+  {id:"724",name:"España",         multi:true, flag:"🇪🇸",year:2014,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"250",name:"Francia",                   flag:"🇫🇷",year:2014,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"276",name:"Alemania",                  flag:"🇩🇪",year:2014,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"756",name:"Suiza",                     flag:"🇨🇭",year:2014,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"203",name:"Chequia",                   flag:"🇨🇿",year:2014,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"208",name:"Dinamarca",                 flag:"🇩🇰",year:2014,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"578",name:"Noruega",                   flag:"🇳🇴",year:2014,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"752",name:"Suecia",                    flag:"🇸🇪",year:2014,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"528",name:"Países Bajos",              flag:"🇳🇱",year:2014,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"056",name:"Bélgica",       multi:true, flag:"🇧🇪",year:2014,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"348",name:"Hungría",                   flag:"🇭🇺",year:2014,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"040",name:"Austria",                   flag:"🇦🇹",year:2014,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"703",name:"Eslovaquia",                flag:"🇸🇰",year:2014,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"380",name:"Italia",                    flag:"🇮🇹",year:2014,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"336",name:"Vaticano",                  flag:"🇻🇦",year:2014,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"246",name:"Finlandia",                 flag:"🇫🇮",year:2018,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"643",name:"Rusia",                     flag:"🇷🇺",year:2018,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"826",name:"Inglaterra",                flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",year:2024,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"620",name:"Portugal",                  flag:"🇵🇹",year:2024,continent:"Europa", showYear:true, pixiesetUrl:"#"},
+  {id:"792",name:"Turquía",                   flag:"🇹🇷",year:2013,continent:"Asia",   showYear:true, pixiesetUrl:"#"},
+  {id:"156",name:"China",                     flag:"🇨🇳",year:2015,continent:"Asia",   showYear:true, pixiesetUrl:"#"},
+  {id:"344",name:"Hong Kong",                 flag:"🇭🇰",year:2016,continent:"Asia",   showYear:true, pixiesetUrl:"#"},
+  {id:"704",name:"Vietnam",                   flag:"🇻🇳",year:2016,continent:"Asia",   showYear:true, pixiesetUrl:"#"},
+  {id:"116",name:"Camboya",                   flag:"🇰🇭",year:2016,continent:"Asia",   showYear:true, pixiesetUrl:"#"},
+  {id:"418",name:"Laos",                      flag:"🇱🇦",year:2016,continent:"Asia",   showYear:true, pixiesetUrl:"#"},
+  {id:"764",name:"Tailandia",                 flag:"🇹🇭",year:2016,continent:"Asia",   showYear:true, pixiesetUrl:"#"},
+  {id:"410",name:"Corea del Sur",             flag:"🇰🇷",year:2016,continent:"Asia",   showYear:true, pixiesetUrl:"#"},
+  {id:"376",name:"Israel",        multi:true, flag:"🇮🇱",year:2018,continent:"Asia",   showYear:true, pixiesetUrl:"#"},
+  {id:"275",name:"Palestina",                 flag:"🇵🇸",year:2018,continent:"Asia",   showYear:true, pixiesetUrl:"#"},
+  {id:"356",name:"India",                     flag:"🇮🇳",year:2018,continent:"Asia",   showYear:true, pixiesetUrl:"#"},
+  {id:"524",name:"Nepal",                     flag:"🇳🇵",year:2018,continent:"Asia",   showYear:true, pixiesetUrl:"#"},
+  {id:"702",name:"Singapur",                  flag:"🇸🇬",year:2019,continent:"Asia",   showYear:true, pixiesetUrl:"#"},
+  {id:"158",name:"Taiwán",                    flag:"🇹🇼",year:2019,continent:"Asia",   showYear:true, pixiesetUrl:"#"},
+  {id:"170",name:"Colombia",      multi:true, flag:"🇨🇴",year:2024,continent:"América",showYear:false,pixiesetUrl:"#"},
+  {id:"484",name:"México",                    flag:"🇲🇽",year:2016,continent:"América",showYear:true, pixiesetUrl:"#"},
+  {id:"032",name:"Argentina",                 flag:"🇦🇷",year:2021,continent:"América",showYear:true, pixiesetUrl:"#"},
+  {id:"840",name:"Estados Unidos",multi:true, flag:"🇺🇸",year:2024,continent:"América",showYear:true, pixiesetUrl:"#"},
+  {id:"036",name:"Australia",                 flag:"🇦🇺",year:2019,continent:"Oceanía",showYear:true, pixiesetUrl:"#"},
+];
+
+const REAL_PHOTOS = {
+  "170": ["https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/images2_i6zjvm","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/images4_vh0rrs","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/images5_k7z3hw","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/images3_j0ezkx","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/images7_clrteg","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/images6_c45hjd","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/images8_d9lmyl","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/images_hnefqy","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/images9_fuomxy"],
+  "275": ["https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/palestina-001_vddarh","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/palestina-002_pcoiqt","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/palestina-003_f3ja9i","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/palestina-004_gtzcvu","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/palestina-005_acgsz8","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/palestina-006_qbdeni","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/palestina-007_es2emh","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/palestina-008_hu0jqs"],
+  "203": ["https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/chequia-001_kopga2","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/chequia-002_ixti2r","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/chequia-003_d4ulco","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/chequia-004_oinfqg","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/chequia-005_rscnwk","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/chequia-006_izpjxs","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/chequia-007_fck53c","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/chequia-008_pza7y1","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/chequia-009_zk47oy"],
+};
+const PHOTO_CACHE={};
+async function loadPhotos(id){
+  if(PHOTO_CACHE[id])return PHOTO_CACHE[id];
+  const urls=REAL_PHOTOS[id]||[];
+  const demo=Array.from({length:12},(_,i)=>{const R=["800/600","600/800","700/700","900/600","600/900","800/500","500/800","750/750"];const[w,h]=R[i%R.length].split("/");return`https://picsum.photos/seed/${id}${i+1}/${w}/${h}`;});
+  PHOTO_CACHE[id]=urls.length?urls:demo;return PHOTO_CACHE[id];
+}
+
+const App = () => {
+
+  const wrapRef = useRef(null);
+  const [active, setActive] = useState(null);
+  const [photos, setPhotos] = useState([]);
+  const [lightbox, setLightbox] = useState(null);
+  const [imgErr, setImgErr] = useState({});
+
+  useEffect(() => {
+    if (!active) { setPhotos([]); return; }
+    loadPhotos(active.id).then(setPhotos);
+  }, [active]);
+
+  useEffect(() => {
+    const handler = e => { if (e.key === 'Escape') { setActive(null); setLightbox(null); } };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+
+  useEffect(()=>{
+    if(!wrapRef.current)return;
+    const ISO_TO_NUM={"ESP":"724","FRA":"250","DEU":"276","CHE":"756","CZE":"203","DNK":"208","NOR":"578","SWE":"752","NLD":"528","BEL":"056","HUN":"348","AUT":"040","SVK":"703","ITA":"380","VAT":"336","FIN":"246","RUS":"643","GBR":"826","PRT":"620","TUR":"792","CHN":"156","HKG":"344","VNM":"704","KHM":"116","LAO":"418","THA":"764","KOR":"410","ISR":"376","PSE":"275","IND":"356","NPL":"524","SGP":"702","TWN":"158","COL":"170","MEX":"484","ARG":"032","USA":"840","AUS":"036"};
+    const VISITED_IDS=new Set(VISITED.map(v=>v.id));
+    const CONT_PAL={
+      "Europa":  ["#EDE5DD","#F5E5D5","#e0d8d0","#ccc4bc","#d8d0c8","#f0e8e0","#e8e0d8"],
+      "Asia":    ["#b8b0a8","#c8c0b8","#a8a098","#d0c8c0","#b0a8a0","#c0b8b0","#bab2aa"],
+      "América": ["#888078","#989088","#807870","#a0988e","#908880","#a8a098","#8a8278"],
+      "Oceanía": ["#706860","#807870","#686058","#888078","#706860","#787068","#6e6660"],
+    };
+    const fillMap={};
+    const tempIdx={};
+    VISITED.forEach(v=>{
+      const pal=CONT_PAL[v.continent]||["#EDE5DD"];
+      if(!(v.continent in tempIdx))tempIdx[v.continent]=0;
+      fillMap[v.id]=pal[tempIdx[v.continent]%pal.length];
+      tempIdx[v.continent]++;
+    });
+
+    const map=new maplibregl.Map({
+      container:wrapRef.current,
+      style:"https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+      center:[15,20],zoom:1.4,minZoom:1,maxZoom:18,
+      attributionControl:false,
+    });
+
+    const tooltip=document.createElement("div");
+    tooltip.style.cssText="position:absolute;background:rgba(6,10,20,0.95);border:1px solid rgba(237,229,221,0.35);border-radius:8px;padding:6px 14px;font-size:13px;color:#EDE5DD;pointer-events:none;white-space:nowrap;z-index:10;display:none;transform:translateX(-50%) translateY(-110%);cursor:pointer;";
+    wrapRef.current.appendChild(tooltip);
+
+    map.on("load",()=>{
+      // Añadir capa GeoJSON de países
+      map.addSource("countries",{
+        type:"geojson",
+        data:"https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json",
+        generateId:true
+      });
+
+      // Construir expression de color para países visitados
+      const colorExpr=["case"];
+      VISITED.forEach(v=>{
+        colorExpr.push(["==",["get","numeric_iso"],v.id]);
+        colorExpr.push(fillMap[v.id]||"#EDE5DD");
+      });
+      colorExpr.push("transparent");
+
+      // Fetch GeoJSON real (countries-110m es topojson, necesitamos GeoJSON)
+      fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+        .then(r=>r.json())
+        .then(topo=>{
+          const raw=topojson.feature(topo,topo.objects.countries);
+
+          // Fix antimeridiano: corregir coordenadas que cruzan 180° (Rusia, USA/Alaska, etc.)
+          const fixRing=ring=>{
+            for(let i=1;i<ring.length;i++){
+              const diff=ring[i][0]-ring[i-1][0];
+              if(diff>180)ring[i][0]-=360;
+              else if(diff<-180)ring[i][0]+=360;
+            }
+            return ring;
+          };
+          const fixCoords=(type,coords)=>{
+            if(type==="Polygon")return coords.map(fixRing);
+            if(type==="MultiPolygon")return coords.map(poly=>poly.map(fixRing));
+            return coords;
+          };
+
+          // Filtrar territorios de ultramar de Francia para evitar polígonos extraños
+          const EUROPE_BOX={lngMin:-30,lngMax:55,latMin:35,latMax:72};
+          const CLIP_IDS=new Set(["250"]);
+          const polyCenter=coords=>{let sL=0,sA=0,c=0;coords[0].forEach(([l,a])=>{sL+=l;sA+=a;c++;});return[sL/c,sA/c];};
+          const filterOverseas=f=>{
+            const id=String(f.id).padStart(3,"0");
+            if(!CLIP_IDS.has(id))return f;
+            const geom=f.geometry;if(!geom)return f;
+            let polys=geom.type==="MultiPolygon"?geom.coordinates:[geom.coordinates];
+            polys=polys.filter(coords=>{const[l,a]=polyCenter(coords);return l>=EUROPE_BOX.lngMin&&l<=EUROPE_BOX.lngMax&&a>=EUROPE_BOX.latMin&&a<=EUROPE_BOX.latMax;});
+            if(!polys.length)return null;
+            return{...f,geometry:{type:polys.length===1?"Polygon":"MultiPolygon",coordinates:polys.length===1?polys[0]:polys}};
+          };
+
+          const geojson={...raw,features:raw.features.map(filterOverseas).filter(Boolean).map(f=>({
+            ...f,
+            geometry:f.geometry?{...f.geometry,coordinates:fixCoords(f.geometry.type,f.geometry.coordinates)}:f.geometry
+          }}));};
+
+          // Agregar numeric_iso como propiedad
+          geojson.features.forEach(f=>{
+            f.properties.numeric_iso=String(f.id).padStart(3,"0");
+          });
+          map.getSource("countries").setData(geojson);
+
+          // Capa de relleno para países visitados
+          map.addLayer({
+            id:"visited-fill",
+            type:"fill",
+            source:"countries",
+            paint:{
+              "fill-color":["case",
+                ...VISITED.flatMap(v=>[["==",["get","numeric_iso"],v.id],fillMap[v.id]||"#EDE5DD"]),
+                "transparent"
+              ],
+              "fill-opacity":["case",["boolean",["feature-state","hover"],false],0.85,0.65]
+            }
+          });
+
+          // Capa de borde para países visitados
+          map.addLayer({
+            id:"visited-border",
+            type:"line",
+            source:"countries",
+            paint:{
+              "line-color":["case",
+                ...VISITED.flatMap(v=>[["==",["get","numeric_iso"],v.id],fillMap[v.id]||"#EDE5DD"]),
+                "transparent"
+              ],
+              "line-width":0.8,
+              "line-opacity":0.5
+            }
+          });
+        });
+
+      // Hover
+      let hoveredId=null;
+      map.on("mousemove","visited-fill",e=>{
+        if(e.features.length>0){
+          if(hoveredId!==null)map.setFeatureState({source:"countries",id:hoveredId},{hover:false});
+          hoveredId=e.features[0].id;
+          map.setFeatureState({source:"countries",id:hoveredId},{hover:true});
+          const numId=e.features[0].properties.numeric_iso;
+          const country=VISITED.find(v=>v.id===numId);
+          if(country){
+            tooltip.style.display="block";
+            tooltip.style.left=e.point.x+"px";
+            tooltip.style.top=e.point.y+"px";
+            tooltip.textContent=country.flag+" "+country.name+" →";
+            tooltip.onclick=()=>setActive({id:numId,country});
+            map.getCanvas().style.cursor="pointer";
+          }
+        }
+      });
+      map.on("mouseleave","visited-fill",()=>{
+        if(hoveredId!==null)map.setFeatureState({source:"countries",id:hoveredId},{hover:false});
+        hoveredId=null;
+        tooltip.style.display="none";
+        map.getCanvas().style.cursor="";
+      });
+      map.on("click","visited-fill",e=>{
+        if(e.features.length>0){
+          const numId=e.features[0].properties.numeric_iso;
+          const country=VISITED.find(v=>v.id===numId);
+          if(country)setActive({id:numId,country});
+        }
+      });
+    });
+
+    return()=>map.remove();
+  },[]);
+
+
+  const totalC=VISITED.length;
+  const conts=[...new Set(VISITED.map(v=>v.continent))].length;
+
+  return React.createElement("div",{style:{background:"#000",minHeight:"100vh",color:"#EDE5DD",fontFamily:"'Inter',system-ui,sans-serif",overflowX:"hidden"}},
+
+    // HEADER
+    React.createElement("header",{style:{padding:"3.5rem 2rem 2.5rem",textAlign:"center",borderBottom:"1px solid rgba(237,229,221,0.06)"}},
+      React.createElement("div",{style:{display:"inline-block",marginBottom:"1rem"}},
+        React.createElement("span",{style:{fontFamily:"'Helvetica Neue',Helvetica,Arial,sans-serif",fontSize:"clamp(2rem,6vw,3.8rem)",fontWeight:900,color:"#EDE5DD",letterSpacing:"-0.02em",lineHeight:1}},"FLASH"),
+        React.createElement("span",{style:{fontFamily:"'Helvetica Neue',Helvetica,Arial,sans-serif",fontSize:"clamp(2rem,6vw,3.8rem)",fontWeight:900,color:"#444",letterSpacing:"-0.02em",lineHeight:1}},"BACK"),
+        React.createElement("span",{style:{fontFamily:"'Helvetica Neue',Helvetica,Arial,sans-serif",fontSize:"clamp(2rem,6vw,3.8rem)",fontWeight:900,color:"#EDE5DD",letterSpacing:"-0.02em",lineHeight:1}},"PACK")
+      ),
+      React.createElement("p",{style:{fontFamily:"'Helvetica Neue',Helvetica,Arial,sans-serif",fontSize:"clamp(0.7rem,1.5vw,0.85rem)",fontWeight:400,color:"#3a3a3a",letterSpacing:"0.22em",textTransform:"uppercase",margin:0}},PROFILE.name)
+    ),
+
+    // STATS
+    React.createElement("div",{style:{textAlign:"center",padding:"1.2rem 2rem",borderBottom:"1px solid rgba(237,229,221,0.06)"}},
+      React.createElement("p",{style:{fontFamily:"'Helvetica Neue',Helvetica,Arial,sans-serif",fontSize:"0.72rem",fontWeight:400,color:"#3a3a3a",letterSpacing:"0.18em",textTransform:"uppercase",margin:0}},
+        `${totalC} países · ${conts} continentes · ${PROFILE.totalPhotos} fotos`
+      )
+    ),
+
+    // MAPA
+    React.createElement("div",{ref:wrapRef,id:"flashback-map",style:{position:"relative",background:"#000",height:"440px"}}),
+
+    // PASAPORTE
+    React.createElement("div",{style:{padding:"2rem 2rem 3rem",borderTop:"1px solid rgba(237,229,221,0.06)"}},
+      React.createElement("p",{style:{fontFamily:"'Inter',system-ui,sans-serif",fontSize:"0.62rem",color:"#3d3a50",letterSpacing:"0.22em",textTransform:"uppercase",marginBottom:"2rem"}},"Pasaporte"),
+      ["Europa","Asia","América","Oceanía"].map(cont=>{
+        const entries=VISITED.filter(v=>v.continent===cont);
+        if(!entries.length)return null;
+        return React.createElement("div",{key:cont,style:{marginBottom:"1.5rem"}},
+          React.createElement("p",{style:{fontSize:"0.56rem",color:"#2e2b3d",letterSpacing:"0.2em",textTransform:"uppercase",marginBottom:"0.7rem",fontFamily:"'Inter',system-ui,sans-serif"}},cont),
+          React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:"0.1rem 0"}},
+            entries.map(ctry=>React.createElement("button",{
+              key:ctry.id,
+              onClick:()=>setActive({id:ctry.id,country:ctry}),
+              title:ctry.name,
+              style:{display:"flex",flexDirection:"column",alignItems:"center",gap:"2px",background:"none",border:"none",cursor:"pointer",padding:"0.35rem 0.3rem",borderRadius:"6px",minWidth:"38px",fontFamily:"inherit",position:"relative"}
+            },
+              React.createElement("span",{style:{fontSize:"1.4rem",lineHeight:1}},ctry.flag),
+              ctry.multi&&React.createElement("span",{style:{position:"absolute",top:"1px",right:"0px",fontSize:"9px",fontWeight:900,color:"#EDE5DD",fontFamily:"'Helvetica Neue',Helvetica,Arial,sans-serif",lineHeight:1,opacity:0.6}},"↵"),
+              ctry.showYear&&React.createElement("span",{style:{fontSize:"0.56rem",color:"#EDE5DD",letterSpacing:"0.03em",opacity:0.55}},ctry.year)
+            ))
+          )
+        );
+      })
+    ),
+
+    // GALERÍA MODAL
+    active&&React.createElement("div",{
+      style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.94)",zIndex:1000,overflowY:"auto",animation:"fadeIn 0.2s ease"},
+      onClick:()=>setActive(null)
+    },
+      React.createElement("div",{style:{maxWidth:"1200px",margin:"0 auto",padding:"2rem 1.5rem 4rem"},onClick:e=>e.stopPropagation()},
+        React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"rgba(0,0,0,0.92)",padding:"1rem 0",marginBottom:"1.5rem",zIndex:2,backdropFilter:"blur(8px)"}},
+          React.createElement("div",null,
+            React.createElement("h2",{style:{fontFamily:"'Helvetica Neue',Helvetica,Arial,sans-serif",fontSize:"1.4rem",fontWeight:900,color:"#EDE5DD",letterSpacing:"-0.01em",textTransform:"uppercase",margin:"0 0 0.15rem",lineHeight:1}},`${active.country.flag} ${active.country.name}`),
+            React.createElement("p",{style:{fontSize:"0.6rem",color:"#3a3a3a",letterSpacing:"0.18em",textTransform:"uppercase",margin:0,fontFamily:"'Inter',system-ui,sans-serif"}},`${active.country.continent} · ${photos.length} fotos`)
+          ),
+          React.createElement("button",{onClick:()=>setActive(null),style:{background:"none",border:"0.5px solid rgba(237,229,221,0.15)",color:"#666",borderRadius:"50%",width:32,height:32,cursor:"pointer",fontSize:"0.85rem",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"inherit",flexShrink:0}},"✕")
+        ),
+        React.createElement("div",{style:{columns:"3 200px",gap:"6px"}},
+          photos.map((url,i)=>React.createElement("div",{
+            key:i,
+            style:{breakInside:"avoid",marginBottom:"6px",cursor:"zoom-in"},
+            onClick:e=>{e.stopPropagation();setLightbox(url);}
+          },
+            React.createElement("img",{
+              src:imgErr[`${active.id}-${i}`]?`https://picsum.photos/seed/${active.id}${i}/600/400`:url,
+              alt:"",
+              onError:()=>setImgErr(e=>({...e,[`${active.id}-${i}`]:true})),
+              style:{width:"100%",display:"block",borderRadius:"4px",background:"#111"}
+            })
+          ))
+        )
+      )
+    ),
+
+    // LIGHTBOX
+    lightbox&&React.createElement("div",{
+      style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.97)",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center",cursor:"zoom-out",animation:"fadeIn 0.15s ease"},
+      onClick:()=>setLightbox(null)
+    },
+      React.createElement("img",{src:lightbox,alt:"",style:{maxWidth:"92vw",maxHeight:"92vh",objectFit:"contain",borderRadius:"4px",display:"block"}}),
+      React.createElement("button",{onClick:()=>setLightbox(null),style:{position:"absolute",top:"1.5rem",right:"1.5rem",background:"none",border:"0.5px solid rgba(237,229,221,0.2)",color:"#666",borderRadius:"50%",width:36,height:36,cursor:"pointer",fontSize:"1rem",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"inherit"}},"✕")
+    )
+  );
+}
+
+const root=ReactDOM.createRoot(document.getElementById("root"));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>
