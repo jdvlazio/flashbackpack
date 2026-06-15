@@ -48,7 +48,7 @@ export default function App() {
         </div>
       </div>
       {active && <GalleryModal active={active} photos={photos} onClose={() => setActive(null)} onOpenLightbox={setLightbox} />}
-      {lightbox && <Lightbox lightbox={lightbox} photos={photos} onClose={() => setLightbox(null)} onPrev={prev} onNext={next} />}
+      {lightbox && <Lightbox lightbox={lightbox} photos={photos} countryName={active?.country?.name} onClose={() => setLightbox(null)} onPrev={prev} onNext={next} />}
     </div>
   )
 }

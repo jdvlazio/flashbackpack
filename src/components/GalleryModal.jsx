@@ -17,10 +17,9 @@ export default function GalleryModal({ active, photos, onClose, onOpenLightbox }
         <div className="gallery-grid" style={{ columns: '3 200px', gap: '6px' }}>
           {photos.map((url, i) => (
             <Photo
-              key={i}
-              id={active.id}
-              index={i}
+              key={url}
               url={url}
+              alt={`${active.country.name} — foto ${i + 1}`}
               onClick={e => { e.stopPropagation(); onOpenLightbox(url) }}
             />
           ))}
