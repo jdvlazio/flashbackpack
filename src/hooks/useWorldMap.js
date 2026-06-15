@@ -11,6 +11,12 @@ export function useWorldMap(wrapRef, onSelect) {
     if (!wrapRef.current) return
 
     const VISITED_A3 = new Set(Object.keys(A3_TO_NUM))
+    const el = wrapRef.current
+
+    // Anti-FOUC: ocultar el mapa hasta que esté recoloreado (demotiles pinta su
+    // estilo a color ~1-2s antes de que dispare "load"). Se revela con un fundido.
+    el.style.opacity = '0'
+    el.style.transition = 'opacity 0.45s ease'
 
     const map = new maplibregl.Map({
       container: wrapRef.current,
@@ -18,6 +24,14 @@ export function useWorldMap(wrapRef, onSelect) {
       center: [15, 10], zoom: 1.3, minZoom: 1, maxZoom: 18,
       attributionControl: false,
     })
+
+    // Endurecer el dimensionado: que llene el contenedor sin depender del timing.
+    const ro = new ResizeObserver(() => map.resize())
+    ro.observe(el)
+
+    // Red de seguridad: si "load" no llegara (CDN caído), revelar igualmente
+    // a los 6s para no dejar el mapa oculto permanentemente.
+    const revealFallback = setTimeout(() => { el.style.opacity = '1' }, 6000)
 
     // Controles: zoom + / - y reset
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right")
@@ -108,9 +122,14 @@ export function useWorldMap(wrapRef, onSelect) {
         const ctry = VISITED.find(v => v.id === num)
         if (ctry) onSelect({ id: num, country: ctry })
       })
+
+      // Ya recoloreado: asegurar dimensionado correcto y revelar con fundido.
+      clearTimeout(revealFallback)
+      map.resize()
+      el.style.opacity = '1'
     })
 
-    return () => map.remove()
+    return () => { clearTimeout(revealFallback); ro.disconnect(); map.remove() }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 }
