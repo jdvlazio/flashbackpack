@@ -15,7 +15,7 @@ export default function App() {
 
   useEffect(() => {
     if (!active) { setPhotos([]); return }
-    loadPhotos(active.id).then(setPhotos)
+    loadPhotos(active.country).then(setPhotos)
   }, [active])
 
   // Atajos de teclado. Depende de `photos`/`lightbox` para navegar sobre la

@@ -41,11 +41,20 @@ export const REAL_PHOTOS = {
   "418": ["https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-001_dw2zxz","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-002_pwfjtd","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-003_husif8","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-004_sl8hw0","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-005_zmnljb","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-006_pokfi7","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-007_sk8pya","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-008_ebmswx","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-009_x3obnq","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-010_yl8fpp","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-011_czu3q9","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-012_vwceah","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-013_njqgzf","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-014_hwsmih","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-015_stsyss","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-016_xnthmd","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-017_ozemvm","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-018_rbsjbp","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-019_cwely0","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-020_ddse5y","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-021_h1cclb","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-022_ym3cdn","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-023_owgsua","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-024_xkbdla","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-025_mkzzmj","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-026_o50paw","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-027_tkmmod","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-028_k4q4gh","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-029_jdrse0","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-030_n63ctz","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-031_johqmg","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-032_jwbphu","https://res.cloudinary.com/deb88gq1x/image/upload/q_auto,f_auto/laos-033_habtcl"]};
 
 const PHOTO_CACHE = {};
-// Solo fotos propias (Cloudinary). Si un país no tuviera fotos devuelve [] —
-// nunca stock ajeno (se eliminó el fallback a picsum).
-export async function loadPhotos(id){
+// Carga DINÁMICA: pide la lista a /photos?folder=<país> (Cloudflare Pages
+// Function que consulta Cloudinary en tiempo real) → al subir fotos aparecen
+// solas. Si la función falla o no hay credenciales aún, CAE a la lista estática
+// REAL_PHOTOS (la web nunca se rompe). Nunca muestra stock ajeno.
+export async function loadPhotos(country){
+  const id = country && country.id;
   if(PHOTO_CACHE[id]) return PHOTO_CACHE[id];
-  PHOTO_CACHE[id] = REAL_PHOTOS[id] || [];
+  let urls = [];
+  try {
+    const res = await fetch(`/photos?folder=${encodeURIComponent(country.name)}`);
+    if(res.ok){ const data = await res.json(); if(Array.isArray(data.urls)) urls = data.urls; }
+  } catch(e){ /* sin red / función: usar fallback */ }
+  if(!urls.length) urls = REAL_PHOTOS[id] || [];
+  PHOTO_CACHE[id] = urls;
   return PHOTO_CACHE[id];
 }
 export const TOTAL_PHOTOS = Object.values(REAL_PHOTOS).reduce((s,a)=>s+a.length,0);
