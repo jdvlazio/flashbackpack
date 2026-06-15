@@ -1,0 +1,36 @@
+{
+  "_purpose": "Referencia dorada del baseline (commit 8010cf9) para auditoría por equivalencia. El refactor del Paso 1 debe reproducir esto salvo lo listado en _intended_changes.",
+  "capturedFrom": "Web/index.html (95878 bytes, produccion juanvilla.pics)",
+  "viewport": "desktop",
+  "dom": {
+    "title": "FLASHBACKPACK — Juan David Villa",
+    "wordmark": "FLASHBACKPACK",
+    "countryCount": 38,
+    "continentHeaders": ["Europa", "Asia", "América", "Oceanía"],
+    "countriesSample": ["🇪🇸|España|↵|2014", "🇫🇷|Francia|2014", "🇩🇪|Alemania|2014", "🇨🇭|Suiza|2014", "🇨🇿|Chequia|2014", "🇩🇰|Dinamarca|2014"],
+    "hasMapCanvas": true,
+    "zoomControls": 2
+  },
+  "computedStyles": {
+    "bodyBg": "rgb(0, 0, 0)",
+    "bodyColor": "rgb(245, 245, 247)",
+    "wordmark": { "fontFamily": "\"Helvetica Neue\", Helvetica, Arial, sans-serif", "fontSize": "28.8px", "fontWeight": "900", "color": "rgb(245, 245, 247)", "letterSpacing": "-0.576px" },
+    "countryName": { "fontSize": "8.32px", "color": "rgb(134, 134, 139)", "letterSpacing": "0.0832px", "fontFamily": "Inter, sans-serif" }
+  },
+  "behaviors": [
+    "Clic en bandera del pasaporte o país del mapa -> abre galería modal de ese país",
+    "Galería: columnas masonry de fotos; clic en foto -> abre lightbox",
+    "Lightbox: flechas izq/der navegan; Escape cierra; clic fuera cierra",
+    "Escape cierra galería y lightbox",
+    "Mapa: hover resalta país visitado con tooltip; clic abre su galería",
+    "Stats: '38 países · 4 continentes · 800 fotos'"
+  ],
+  "_known_issues_baseline": [
+    "Mapa canvas congelado en 400x300 (no llena contenedor) — falta resize/ResizeObserver",
+    "FOUC: estilo demotiles a color visible ~1-2s antes del recoloreo oscuro",
+    "Movil: el mapa queda debajo de todo el pasaporte (orden DOM)",
+    "Fallback de imagen rota -> foto de stock ajena (picsum)",
+    "Sin loading=lazy; alt vacio; sin OG/favicon"
+  ],
+  "_intended_changes_paso1": "NINGUNO de comportamiento. Paso 1 es refactor estructural (Vite + JSX + componentes + tokens) que debe renderizar y comportarse IGUAL que este baseline. Los _known_issues se corrigen en pasos posteriores, no en el Paso 1."
+}
