@@ -29,10 +29,6 @@ export function useWorldMap(wrapRef, onSelect) {
     const ro = new ResizeObserver(() => map.resize())
     ro.observe(el)
 
-    // Red de seguridad: si "load" no llegara (CDN caído), revelar igualmente
-    // a los 6s para no dejar el mapa oculto permanentemente.
-    const revealFallback = setTimeout(() => { el.style.opacity = '1' }, 6000)
-
     // Controles: zoom + / - y reset
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right")
 
@@ -123,14 +119,16 @@ export function useWorldMap(wrapRef, onSelect) {
         if (ctry) onSelect({ id: num, country: ctry })
       })
 
-      // Ya recoloreado: asegurar dimensionado y revelar SOLO cuando el primer
-      // frame recoloreado esté pintado ("idle") — garantiza que el flash de
-      // color de demotiles nunca es visible.
+      // Ya recoloreado: asegurar dimensionado y revelar en el PRIMER frame
+      // pintado tras el recoloreo ("render") — garantiza que el flash de color
+      // de demotiles nunca es visible. Sin red de seguridad por tiempo: si
+      // demotiles fallara/tardara, la zona queda negra (on-brand) en vez de
+      // mostrar el mapa de colores equivocado.
       map.resize()
-      map.once('idle', () => { clearTimeout(revealFallback); el.style.opacity = '1' })
+      map.once('render', () => { el.style.opacity = '1' })
     })
 
-    return () => { clearTimeout(revealFallback); ro.disconnect(); resetBtn.remove(); tooltip.remove(); map.remove() }
+    return () => { ro.disconnect(); resetBtn.remove(); tooltip.remove(); map.remove() }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 }
