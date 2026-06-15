@@ -1,7 +1,6 @@
 // Datos de países visitados. Extraído verbatim del baseline (Web/index.html).
 export const PROFILE = {
   name: "Juan David Villa",
-  totalPhotos: 807,
 };
 
 export const VISITED = [
