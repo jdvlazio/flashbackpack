@@ -1,11 +1,8 @@
-// Genera public/countries.svg.json: países proyectados a paths SVG (Natural
-// Earth) + copia las banderas de los países visitados a public/flags/.
+// Genera public/countries.svg.json: países proyectados a paths SVG (Mercator).
 // Uso: node scripts/build-geo.mjs   (requiere red para el dataset)
 import { feature } from 'topojson-client'
 import { geoMercator, geoPath } from 'd3-geo'
-import { writeFileSync, mkdirSync, copyFileSync, existsSync } from 'fs'
-import { VISITED } from '../src/data/countries.js'
-import { flagToAlpha2 } from '../src/lib/flags.js'
+import { writeFileSync, mkdirSync } from 'fs'
 
 const SRC = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
@@ -38,23 +35,10 @@ const tr = projection.translate()
 projection.translate([tr[0] - x0, tr[1] - y0])
 toPath = geoPath(projection)
 const H = Math.ceil(y1 - y0)
-const r = n => Math.round(n * 10) / 10
 const countries = features
-  .map(f => {
-    const [[bx0, by0], [bx1, by1]] = toPath.bounds(f)
-    return { iso: f.properties.iso, name: f.properties.name, d: toPath(f), bbox: [r(bx0), r(by0), r(bx1), r(by1)] }
-  })
+  .map(f => ({ iso: f.properties.iso, name: f.properties.name, d: toPath(f) }))
   .filter(c => c.d)
 mkdirSync('public', { recursive: true })
 writeFileSync('public/countries.svg.json', JSON.stringify({ width: W, height: H, countries }))
 
-// Copiar banderas (4x3) de los países visitados a public/flags/
-mkdirSync('public/flags', { recursive: true })
-const codes = new Set(VISITED.map(v => flagToAlpha2(v.flag)))
-let copied = 0, missing = []
-for (const code of codes) {
-  const src = `node_modules/flag-icons/flags/4x3/${code}.svg`
-  if (existsSync(src)) { copyFileSync(src, `public/flags/${code}.svg`); copied++ }
-  else missing.push(code)
-}
-console.log(`OK · ${countries.length} paths · ${copied} banderas` + (missing.length ? ` · faltan: ${missing.join(',')}` : ''))
+console.log(`OK · ${countries.length} paths`)

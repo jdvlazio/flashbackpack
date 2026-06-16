@@ -15,14 +15,14 @@ body {
 /* Mapa SVG */
 #flashback-map svg { position: absolute; inset: 0; }
 /* bordes en píxeles constantes (no engordan al hacer zoom) */
-.cl, .cvbase, .cflag, .cborder { vector-effect: non-scaling-stroke; }
+.cl, .cv { vector-effect: non-scaling-stroke; }
 .cl { fill: var(--map-land); stroke: var(--map-land-border); stroke-width: 0.5; }    /* país no visitado */
-.cv { cursor: pointer; }                                                             /* país visitado */
-.cvbase { fill: var(--map-land); }                                                   /* base de tierra bajo la bandera */
-.cflag { opacity: 0.12; transition: opacity 0.15s ease; }                            /* bandera sutil recortada a la silueta */
-.cborder { fill: transparent; stroke: var(--map-visited-border); stroke-width: 0.6; stroke-opacity: 0.30; transition: stroke 0.15s ease; }
-.cv:hover .cflag { opacity: 0.55; }
-.cv:hover .cborder { stroke: var(--accent); stroke-opacity: 1; stroke-width: 1.1; }
+.cv {                                                                                /* país visitado: tinte sutil */
+  fill: var(--map-visited); fill-opacity: 0.16;
+  stroke: var(--map-visited-border); stroke-width: 0.6; stroke-opacity: 0.35;
+  cursor: pointer; transition: fill 0.15s ease, fill-opacity 0.15s ease, stroke 0.15s ease;
+}
+.cv:hover { fill: var(--accent); fill-opacity: 0.42; stroke: var(--accent); stroke-opacity: 1; stroke-width: 1.1; }
 
 /* Controles de zoom */
 .map-zoom { position: absolute; top: 12px; right: 12px; z-index: 8; display: flex; flex-direction: column; gap: 6px; }
