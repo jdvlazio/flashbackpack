@@ -2,8 +2,10 @@
 // Uso: node scripts/build-geo.mjs   (requiere red para el dataset)
 import { feature } from 'topojson-client'
 import { geoMercator, geoPath } from 'd3-geo'
-import { writeFileSync, mkdirSync } from 'fs'
+import { writeFileSync, mkdirSync, copyFileSync, existsSync } from 'fs'
 import { createRequire } from 'module'
+import { VISITED } from '../src/data/countries.js'
+import { flagToAlpha2 } from '../src/lib/flags.js'
 const worldCountries = createRequire(import.meta.url)('world-countries')
 
 // ISO numérico -> clave de continente (para colorear la tierra por continente).
@@ -42,10 +44,27 @@ const tr = projection.translate()
 projection.translate([tr[0] - x0, tr[1] - y0])
 toPath = geoPath(projection)
 const H = Math.ceil(y1 - y0)
+const VISITED_IDS = new Set(VISITED.map(v => v.id))
+const r = n => Math.round(n * 10) / 10
 const countries = features
-  .map(f => ({ iso: f.properties.iso, name: f.properties.name, cont: CONT_BY_ISO[f.properties.iso] || 'xx', d: toPath(f) }))
+  .map(f => {
+    const c = { iso: f.properties.iso, name: f.properties.name, cont: CONT_BY_ISO[f.properties.iso] || 'xx', d: toPath(f) }
+    if (VISITED_IDS.has(f.properties.iso)) { // centroide proyectado solo para visitados (posiciona el pin)
+      const [cx, cy] = toPath.centroid(f)
+      if (cx === cx && cy === cy) c.cen = [r(cx), r(cy)] // NaN-safe
+    }
+    return c
+  })
   .filter(c => c.d)
 mkdirSync('public', { recursive: true })
 writeFileSync('public/countries.svg.json', JSON.stringify({ width: W, height: H, countries }))
 
-console.log(`OK · ${countries.length} paths`)
+// Copiar banderas (4x3) de los países visitados a public/flags/ (para los pines)
+mkdirSync('public/flags', { recursive: true })
+let copied = 0, missing = []
+for (const code of new Set(VISITED.map(v => flagToAlpha2(v.flag)))) {
+  const src = `node_modules/flag-icons/flags/4x3/${code}.svg`
+  if (existsSync(src)) { copyFileSync(src, `public/flags/${code}.svg`); copied++ }
+  else missing.push(code)
+}
+console.log(`OK · ${countries.length} paths · ${copied} banderas` + (missing.length ? ` · faltan: ${missing.join(',')}` : ''))
