@@ -21,7 +21,12 @@ export default function Passport({ onSelect }) {
                 >
                   <span style={{ fontSize: '1.6rem', lineHeight: 1 }}>{ctry.flag}</span>
                   <span style={{ fontSize: '0.52rem', color: 'var(--c-muted-2)', fontFamily: 'var(--font-body)', letterSpacing: '0.01em', textAlign: 'center', lineHeight: 1.2 }}>{ctry.name}</span>
-                  {ctry.multi && <span style={{ position: 'absolute', top: '2px', right: '2px', fontSize: '8px', color: 'var(--c-dim)', lineHeight: 1 }}>↵</span>}
+                  {ctry.multi && (
+                    <svg className="revisit" viewBox="0 0 24 24" width="11" height="11" aria-label="Revisitado" style={{ position: 'absolute', top: '3px', right: '3px', fill: 'var(--c-dim)' }}>
+                      <title>Revisitado</title>
+                      <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                    </svg>
+                  )}
                   {ctry.showYear && <span style={{ fontSize: '0.5rem', color: 'var(--c-muted-4)', letterSpacing: '0.04em' }}>{ctry.year}</span>}
                 </button>
               ))}
