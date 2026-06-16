@@ -1,48 +1,47 @@
-// Genera public/countries.geo.json (mapa autocontenido) desde world-atlas.
-// Uso: node scripts/build-geo.mjs
-// Requiere: devDependency `topojson-client` y red para descargar el dataset.
+// Genera public/countries.svg.json: países proyectados a paths SVG (Natural
+// Earth) + copia las banderas de los países visitados a public/flags/.
+// Uso: node scripts/build-geo.mjs   (requiere red para el dataset)
 import { feature } from 'topojson-client'
-import { writeFileSync } from 'fs'
+import { geoNaturalEarth1, geoPath } from 'd3-geo'
+import { writeFileSync, mkdirSync, copyFileSync, existsSync } from 'fs'
+import { VISITED } from '../src/data/countries.js'
+import { flagToAlpha2 } from '../src/lib/flags.js'
 
 const SRC = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
-const OUT = 'public/countries.geo.json'
 
-// Corrige el cruce del antimeridiano (Rusia, Fiji, USA/Alaska): evita que un
-// anillo "salte" >180° de longitud, lo que pintaría una banda a lo ancho del mapa.
-const fixRing = ring => {
-  for (let i = 1; i < ring.length; i++) {
-    const d = ring[i][0] - ring[i - 1][0]
-    if (d > 180) ring[i][0] -= 360
-    else if (d < -180) ring[i][0] += 360
-  }
-  return ring
-}
-const fixCoords = (type, coords) =>
-  type === 'Polygon' ? coords.map(fixRing)
-  : type === 'MultiPolygon' ? coords.map(p => p.map(fixRing))
-  : coords
-
-// El dataset agrupa los territorios de ultramar bajo el país soberano. No deben
-// resaltarse como el país (los países son los que son). Recortamos los de
-// Francia (Guayana Francesa, Reunión, Martinica, Guadalupe, Mayotte): se
-// conserva solo la Francia metropolitana + Córcega (bbox europeo).
+// Recorte de ultramar de Francia: conservar solo metropolitana + Córcega
+// (los países son los que son, no colonizaciones).
 const inMetroFR = pt => pt[0] >= -6 && pt[0] <= 10 && pt[1] >= 41 && pt[1] <= 52
 
 const topo = await (await fetch(SRC)).json()
 const geo = feature(topo, topo.objects.countries)
 geo.features.forEach(f => {
-  // ISO 3166-1 numérico, 3 dígitos. Algunos territorios disputados (Kosovo,
-  // Chipre del Norte, Somalilandia) no tienen ISO en el dataset: iso = null
-  // (se pintan como tierra, nunca se resaltan) en vez del literal "undefined".
   const id = f.id == null ? null : String(f.id).padStart(3, '0')
   f.id = id
   f.properties = { ...(f.properties || {}), iso: id }
-  if (f.geometry) {
-    if (id === '250' && f.geometry.type === 'MultiPolygon') {
-      f.geometry.coordinates = f.geometry.coordinates.filter(poly => inMetroFR(poly[0][0]))
-    }
-    f.geometry.coordinates = fixCoords(f.geometry.type, f.geometry.coordinates)
+  if (id === '250' && f.geometry && f.geometry.type === 'MultiPolygon') {
+    f.geometry.coordinates = f.geometry.coordinates.filter(poly => inMetroFR(poly[0][0]))
   }
 })
-writeFileSync(OUT, JSON.stringify(geo))
-console.log(`OK · ${geo.features.length} países · ${OUT}`)
+
+// Proyección a un viewBox fijo; el SVG escala responsivo vía viewBox.
+// d3-geo recorta el antimeridiano por sí solo (Rusia/Fiji/USA bien).
+const W = 1000, H = 500
+const projection = geoNaturalEarth1().fitSize([W, H], geo)
+const toPath = geoPath(projection)
+const countries = geo.features
+  .map(f => ({ iso: f.properties.iso, name: f.properties.name, d: toPath(f) }))
+  .filter(c => c.d)
+mkdirSync('public', { recursive: true })
+writeFileSync('public/countries.svg.json', JSON.stringify({ width: W, height: H, countries }))
+
+// Copiar banderas (4x3) de los países visitados a public/flags/
+mkdirSync('public/flags', { recursive: true })
+const codes = new Set(VISITED.map(v => flagToAlpha2(v.flag)))
+let copied = 0, missing = []
+for (const code of codes) {
+  const src = `node_modules/flag-icons/flags/4x3/${code}.svg`
+  if (existsSync(src)) { copyFileSync(src, `public/flags/${code}.svg`); copied++ }
+  else missing.push(code)
+}
+console.log(`OK · ${countries.length} paths · ${copied} banderas` + (missing.length ? ` · faltan: ${missing.join(',')}` : ''))

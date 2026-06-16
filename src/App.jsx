@@ -1,14 +1,13 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { loadPhotos } from './data/photos.js'
-import { useWorldMap } from './hooks/useWorldMap.js'
 import Header from './components/Header.jsx'
 import Stats from './components/Stats.jsx'
 import Passport from './components/Passport.jsx'
+import WorldMap from './components/WorldMap.jsx'
 import GalleryModal from './components/GalleryModal.jsx'
 import Lightbox from './components/Lightbox.jsx'
 
 export default function App() {
-  const wrapRef = useRef(null)
   const [active, setActive] = useState(null)
   const [photos, setPhotos] = useState([])
   const [lightbox, setLightbox] = useState(null)
@@ -32,8 +31,6 @@ export default function App() {
     return () => window.removeEventListener('keydown', handler)
   }, [photos, lightbox])
 
-  useWorldMap(wrapRef, setActive)
-
   const prev = () => { const i = photos.indexOf(lightbox); if (i > 0) setLightbox(photos[i - 1]) }
   const next = () => { const i = photos.indexOf(lightbox); if (i < photos.length - 1) setLightbox(photos[i + 1]) }
 
@@ -44,7 +41,7 @@ export default function App() {
       <div id="main-layout" style={{ display: 'flex', alignItems: 'stretch', position: 'relative' }}>
         <Passport onSelect={setActive} />
         <div id="map-wrapper" style={{ flex: 1, position: 'relative', minHeight: '500px', background: 'var(--bg)' }}>
-          <div ref={wrapRef} id="flashback-map"></div>
+          <WorldMap onSelect={setActive} />
         </div>
       </div>
       {active && <GalleryModal active={active} photos={photos} onClose={() => setActive(null)} onOpenLightbox={setLightbox} />}
