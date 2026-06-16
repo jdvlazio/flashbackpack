@@ -14,15 +14,15 @@ body {
 
 /* Mapa SVG */
 #flashback-map svg { position: absolute; inset: 0; }
-/* bordes en píxeles constantes (no engordan al hacer zoom) */
-.cl, .cv { vector-effect: non-scaling-stroke; }
-.cl { fill: var(--map-land); stroke: var(--map-land-border); stroke-width: 0.5; }    /* país no visitado */
-.cv {                                                                                /* país visitado: tinte sutil */
-  fill: var(--map-visited); fill-opacity: 0.16;
-  stroke: var(--map-visited-border); stroke-width: 0.6; stroke-opacity: 0.35;
-  cursor: pointer; transition: fill 0.15s ease, fill-opacity 0.15s ease, stroke 0.15s ease;
-}
-.cv:hover { fill: var(--accent); fill-opacity: 0.42; stroke: var(--accent); stroke-opacity: 1; stroke-width: 1.1; }
+/* Tierra: relleno por continente (clases eu/as/am/af/oc/xx). Borde = junta de
+   sombra, hairline en píxeles constantes (no engorda al hacer zoom). */
+.cl, .cv { stroke: var(--map-border); stroke-width: 0.5; vector-effect: non-scaling-stroke; }
+.cv { cursor: pointer; transition: fill 0.15s ease, stroke 0.15s ease; }
+.cl.eu { fill: var(--cont-eu); } .cl.as { fill: var(--cont-as); } .cl.am { fill: var(--cont-am); }
+.cl.af { fill: var(--cont-af); } .cl.oc { fill: var(--cont-oc); } .cl.xx { fill: var(--cont-xx); }
+.cv.eu { fill: var(--cont-eu-v); } .cv.as { fill: var(--cont-as-v); } .cv.am { fill: var(--cont-am-v); }
+.cv.af { fill: var(--cont-af-v); } .cv.oc { fill: var(--cont-oc-v); } .cv.xx { fill: var(--cont-xx-v); }
+.cv:hover { fill: var(--accent); stroke: var(--accent); stroke-width: 1.1; }
 
 /* Controles de zoom */
 .map-zoom { position: absolute; top: 12px; right: 12px; z-index: 8; display: flex; flex-direction: column; gap: 6px; }

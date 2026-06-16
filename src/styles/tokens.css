@@ -32,12 +32,19 @@
   --btn-bg:     rgba(26,24,20,0.80);
   --btn-bg-2:   rgba(26,24,20,0.85);
 
-  /* Mapa (leídos por el hook del mapa vía getComputedStyle) */
-  --map-bg:             #100f0d;  /* océano / fondo */
-  --map-land:           #1c1a16;  /* países no visitados (tierra) */
-  --map-land-border:    #2c2820;  /* borde tenue de tierra */
-  --map-visited:        #d8d2c4;  /* relleno de países visitados (crema apagada) */
-  --map-visited-border: #f4f1ea;  /* borde de visitados */
+  /* Mapa */
+  --map-bg:     #100f0d;  /* océano / fondo */
+  --map-border: #100e0b;  /* junta de sombra: MÁS oscuro que la tierra (separa sin brillar) */
+
+  /* Diferenciación por continente — relleno en tonos MUY apagados (toque de
+     clase sin romper el minimalismo). Base = no visitado; *-v = visitado (mismo
+     matiz, más claro y presente). Cambiar aquí = cambia el mapa entero. */
+  --cont-eu: #191b21;  --cont-eu-v: #565d70;  /* Europa  — pizarra fría    */
+  --cont-as: #221c16;  --cont-as-v: #6b5740;  /* Asia    — bronce cálido   */
+  --cont-am: #161e1d;  --cont-am-v: #41615b;  /* América — verde azulado   */
+  --cont-af: #20201a;  --cont-af-v: #605a3d;  /* África  — oliva           */
+  --cont-oc: #1f1a21;  --cont-oc-v: #58495f;  /* Oceanía — ciruela         */
+  --cont-xx: #1b1916;  --cont-xx-v: #5a544a;  /* sin continente / fallback */
 
   /* Tipografía */
   --font-display: 'Helvetica Neue', Helvetica, Arial, sans-serif;

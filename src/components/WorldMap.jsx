@@ -9,8 +9,11 @@ import { VISITED } from '../data/countries.js'
 // La bandera vive en el tooltip al hover y en el pasaporte. Zoom/arrastre/
 // pellizco vía d3-zoom (transform sobre el <g>, sin re-render). Paleta = tokens.
 const BASE = import.meta.env.BASE_URL
+// Continente del pasaporte (es) -> clave de color del mapa (consistente con el
+// resto de la web). El resto de países toma su continente del propio JSON.
+const CONT_KEY = { Europa: 'eu', Asia: 'as', 'América': 'am', 'Oceanía': 'oc', 'África': 'af' }
 const VISITED_BY_ISO = {}
-VISITED.forEach(v => { VISITED_BY_ISO[v.id] = v })
+VISITED.forEach(v => { VISITED_BY_ISO[v.id] = { ...v, cont: CONT_KEY[v.continent] || 'xx' } })
 
 export default function WorldMap({ onSelect }) {
   const [data, setData] = useState(null)
@@ -66,9 +69,9 @@ export default function WorldMap({ onSelect }) {
           <g ref={gRef}>
             {data.countries.map(c => {
               const v = VISITED_BY_ISO[c.iso]
-              if (!v) return <path key={c.iso} className="cl" d={c.d} />
+              if (!v) return <path key={c.iso} className={`cl ${c.cont || 'xx'}`} d={c.d} />
               return (
-                <path key={c.iso} className="cv" d={c.d}
+                <path key={c.iso} className={`cv ${v.cont}`} d={c.d}
                   onMouseEnter={e => moveTip(e, v)}
                   onMouseMove={e => moveTip(e, v)}
                   onMouseLeave={hideTip}

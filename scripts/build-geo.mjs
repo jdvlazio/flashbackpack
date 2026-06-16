@@ -3,6 +3,13 @@
 import { feature } from 'topojson-client'
 import { geoMercator, geoPath } from 'd3-geo'
 import { writeFileSync, mkdirSync } from 'fs'
+import { createRequire } from 'module'
+const worldCountries = createRequire(import.meta.url)('world-countries')
+
+// ISO numérico -> clave de continente (para colorear la tierra por continente).
+const REGION_KEY = { Europe: 'eu', Asia: 'as', Americas: 'am', Africa: 'af', Oceania: 'oc' }
+const CONT_BY_ISO = {}
+worldCountries.forEach(c => { if (c.ccn3) CONT_BY_ISO[c.ccn3] = REGION_KEY[c.region] || 'xx' })
 
 const SRC = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
@@ -36,7 +43,7 @@ projection.translate([tr[0] - x0, tr[1] - y0])
 toPath = geoPath(projection)
 const H = Math.ceil(y1 - y0)
 const countries = features
-  .map(f => ({ iso: f.properties.iso, name: f.properties.name, d: toPath(f) }))
+  .map(f => ({ iso: f.properties.iso, name: f.properties.name, cont: CONT_BY_ISO[f.properties.iso] || 'xx', d: toPath(f) }))
   .filter(c => c.d)
 mkdirSync('public', { recursive: true })
 writeFileSync('public/countries.svg.json', JSON.stringify({ width: W, height: H, countries }))
