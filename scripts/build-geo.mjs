@@ -2,7 +2,7 @@
 // Earth) + copia las banderas de los países visitados a public/flags/.
 // Uso: node scripts/build-geo.mjs   (requiere red para el dataset)
 import { feature } from 'topojson-client'
-import { geoNaturalEarth1, geoPath } from 'd3-geo'
+import { geoMercator, geoPath } from 'd3-geo'
 import { writeFileSync, mkdirSync, copyFileSync, existsSync } from 'fs'
 import { VISITED } from '../src/data/countries.js'
 import { flagToAlpha2 } from '../src/lib/flags.js'
@@ -24,12 +24,21 @@ geo.features.forEach(f => {
   }
 })
 
-// Proyección a un viewBox fijo; el SVG escala responsivo vía viewBox.
+// Proyección MERCATOR (plana, todo en una vista; las banderas encajan mejor).
+// Excluimos la Antártida (010): en Mercator se deforma enorme y no es visitada.
 // d3-geo recorta el antimeridiano por sí solo (Rusia/Fiji/USA bien).
-const W = 1000, H = 500
-const projection = geoNaturalEarth1().fitSize([W, H], geo)
-const toPath = geoPath(projection)
-const countries = geo.features
+const features = geo.features.filter(f => f.properties.iso !== '010')
+const fc = { type: 'FeatureCollection', features }
+const W = 1000
+const projection = geoMercator().fitWidth(W, fc)
+let toPath = geoPath(projection)
+// Encuadre vertical ajustado: trasladar para que el contenido empiece en y=0.
+const [[x0, y0], [, y1]] = toPath.bounds(fc)
+const tr = projection.translate()
+projection.translate([tr[0] - x0, tr[1] - y0])
+toPath = geoPath(projection)
+const H = Math.ceil(y1 - y0)
+const countries = features
   .map(f => ({ iso: f.properties.iso, name: f.properties.name, d: toPath(f) }))
   .filter(c => c.d)
 mkdirSync('public', { recursive: true })
