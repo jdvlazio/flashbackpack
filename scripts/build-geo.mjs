@@ -22,6 +22,12 @@ const fixCoords = (type, coords) =>
   : type === 'MultiPolygon' ? coords.map(p => p.map(fixRing))
   : coords
 
+// El dataset agrupa los territorios de ultramar bajo el país soberano. No deben
+// resaltarse como el país (los países son los que son). Recortamos los de
+// Francia (Guayana Francesa, Reunión, Martinica, Guadalupe, Mayotte): se
+// conserva solo la Francia metropolitana + Córcega (bbox europeo).
+const inMetroFR = pt => pt[0] >= -6 && pt[0] <= 10 && pt[1] >= 41 && pt[1] <= 52
+
 const topo = await (await fetch(SRC)).json()
 const geo = feature(topo, topo.objects.countries)
 geo.features.forEach(f => {
@@ -31,7 +37,12 @@ geo.features.forEach(f => {
   const id = f.id == null ? null : String(f.id).padStart(3, '0')
   f.id = id
   f.properties = { ...(f.properties || {}), iso: id }
-  if (f.geometry) f.geometry.coordinates = fixCoords(f.geometry.type, f.geometry.coordinates)
+  if (f.geometry) {
+    if (id === '250' && f.geometry.type === 'MultiPolygon') {
+      f.geometry.coordinates = f.geometry.coordinates.filter(poly => inMetroFR(poly[0][0]))
+    }
+    f.geometry.coordinates = fixCoords(f.geometry.type, f.geometry.coordinates)
+  }
 })
 writeFileSync(OUT, JSON.stringify(geo))
 console.log(`OK · ${geo.features.length} países · ${OUT}`)

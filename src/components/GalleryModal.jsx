@@ -19,7 +19,7 @@ export default function GalleryModal({ active, photos, onClose, onOpenLightbox }
         style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem 4rem', outline: 'none' }}
         onClick={e => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: 'rgba(0,0,0,0.94)', padding: '1rem 0', marginBottom: '1.5rem', zIndex: 2, backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--line)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: 'rgba(12,12,13,0.94)', padding: '1rem 0', marginBottom: '1.5rem', zIndex: 2, backdropFilter: 'blur(12px)' }}>
           <div>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 900, color: 'var(--fg)', letterSpacing: '-0.01em', textTransform: 'uppercase', margin: '0 0 0.15rem', lineHeight: 1 }}>{`${active.country.flag} ${active.country.name}`}</h2>
             <p style={{ fontSize: '0.6rem', color: 'var(--c-muted)', letterSpacing: '0.18em', textTransform: 'uppercase', margin: 0, fontFamily: 'var(--font-body)' }}>{`${active.country.continent} · ${photos.length} fotos`}</p>

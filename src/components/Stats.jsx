@@ -18,7 +18,7 @@ export default function Stats() {
   }, [])
 
   return (
-    <div style={{ textAlign: 'center', padding: '0.6rem 2rem', borderBottom: '1px solid var(--line-2)' }}>
+    <div style={{ textAlign: 'center', padding: '0.6rem 2rem' }}>
       <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.65rem', color: 'var(--c-dim-2)', letterSpacing: '0.2em', textTransform: 'uppercase', margin: 0 }}>
         {totalC} países <span style={{ color: 'var(--accent)' }}>·</span> {conts} continentes <span style={{ color: 'var(--accent)' }}>·</span> {photos} fotos
       </p>

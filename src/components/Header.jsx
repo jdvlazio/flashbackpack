@@ -4,7 +4,7 @@ const word = { fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem,5vw,3.
 
 export default function Header() {
   return (
-    <header style={{ padding: '2rem 2rem 1.2rem', textAlign: 'center', borderBottom: '1px solid var(--line)' }}>
+    <header style={{ padding: '2rem 2rem 1.2rem', textAlign: 'center' }}>
       <div style={{ display: 'inline-block', marginBottom: '0.5rem' }}>
         <span style={{ ...word, color: 'var(--fg)' }}>FLASH</span>
         <span style={{ ...word, color: 'var(--accent)' }}>BACK</span>

@@ -2,13 +2,13 @@ import { VISITED, CONTINENT_ORDER } from '../data/countries.js'
 
 export default function Passport({ onSelect }) {
   return (
-    <div id="sidebar" style={{ width: '360px', flexShrink: 0, borderRight: '1px solid var(--line)', background: 'var(--bg)', overflowY: 'auto' }}>
-      <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.58rem', color: 'var(--c-muted)', letterSpacing: '0.28em', textTransform: 'uppercase', padding: '1.2rem 1.4rem 0.8rem', margin: 0, borderBottom: '1px solid var(--line-3)' }}>Pasaporte</p>
+    <div id="sidebar" style={{ width: '360px', flexShrink: 0, background: 'var(--bg)', overflowY: 'auto' }}>
+      <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.58rem', color: 'var(--c-muted)', letterSpacing: '0.28em', textTransform: 'uppercase', padding: '1.2rem 1.4rem 0.8rem', margin: 0 }}>Pasaporte</p>
       {CONTINENT_ORDER.map(cont => {
         const entries = VISITED.filter(v => v.continent === cont)
         if (!entries.length) return null
         return (
-          <div key={cont} style={{ borderBottom: '1px solid var(--line-3)', padding: '0.8rem 1.4rem 1rem' }}>
+          <div key={cont} style={{ padding: '0.8rem 1.4rem 1rem' }}>
             <p style={{ fontSize: '0.5rem', color: 'var(--c-muted-3)', letterSpacing: '0.22em', textTransform: 'uppercase', margin: '0 0 0.6rem', fontFamily: 'var(--font-body)' }}>{cont}</p>
             <div className="passport-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '2px' }}>
               {entries.map(ctry => (

@@ -59,7 +59,9 @@ export function useWorldMap(wrapRef, onSelect) {
       el.appendChild(resetBtn)
 
       tooltip = document.createElement('div')
-      tooltip.style.cssText = 'position:absolute;background:rgba(6,10,20,0.95);border:1px solid rgba(237,229,221,0.35);border-radius:8px;padding:6px 14px;font-size:13px;color:#EDE5DD;pointer-events:auto;white-space:nowrap;z-index:10;display:none;transform:translateX(-50%) translateY(-130%);cursor:pointer;'
+      // pointer-events:none → en táctil los toques pasan al mapa (no al tooltip),
+      // así un toque en el país abre la galería directamente.
+      tooltip.style.cssText = 'position:absolute;background:rgba(12,12,13,0.95);border:1px solid rgba(245,166,35,0.5);border-radius:8px;padding:6px 14px;font-size:13px;color:#f4f1ea;pointer-events:none;white-space:nowrap;z-index:10;display:none;transform:translateX(-50%) translateY(-130%);'
       el.appendChild(tooltip)
 
       ro = new ResizeObserver(() => map.resize())
@@ -108,7 +110,6 @@ export function useWorldMap(wrapRef, onSelect) {
             tooltip.style.left = e.point.x + 'px'
             tooltip.style.top = e.point.y + 'px'
             tooltip.textContent = ctry.flag + ' ' + ctry.name + ' →'
-            tooltip.onclick = () => onSelect({ id: iso, country: ctry })
             map.getCanvas().style.cursor = 'pointer'
           }
         })
