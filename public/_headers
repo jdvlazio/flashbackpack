@@ -1,0 +1,23 @@
+# Cabeceras de caché para Cloudflare Pages.
+# Objetivo: nunca servir una versión vieja del shell ni de los datos, pero
+# cachear "para siempre" los assets con hash de contenido.
+
+# HTML del shell: SIEMPRE revalidar (no quedarse con un index.html viejo que
+# referencie bundles ya purgados → era la causa del mapa "roto" en Safari).
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+
+# Datos del mapa (no llevan hash en el nombre): revalidar siempre.
+/countries.svg.json
+  Cache-Control: no-cache
+
+# Banderas (cambian rarísimo, sin hash): cache de 1 día pero revalidable.
+/flags/*
+  Cache-Control: public, max-age=86400, must-revalidate
+
+# Assets con hash de contenido (Vite: index-XXXXXXXX.js/css): inmutables.
+# Cada cambio = nombre nuevo, así que es seguro cachearlos un año.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
