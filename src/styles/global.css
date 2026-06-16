@@ -14,12 +14,25 @@ body {
 
 /* Mapa SVG */
 #flashback-map svg { position: absolute; inset: 0; }
-.cl { fill: var(--map-land); stroke: var(--map-land-border); stroke-width: 0.3; }   /* país no visitado */
-.cv {                                                                                /* país visitado (relleno = bandera) */
-  fill-opacity: 0.30; stroke: var(--map-visited-border); stroke-width: 0.4; stroke-opacity: 0.35;
-  cursor: pointer; transition: fill-opacity 0.15s ease, stroke 0.15s ease;
+/* bordes en píxeles constantes (no engordan al hacer zoom) */
+.cl, .cvbase, .cflag, .cborder { vector-effect: non-scaling-stroke; }
+.cl { fill: var(--map-land); stroke: var(--map-land-border); stroke-width: 0.5; }    /* país no visitado */
+.cv { cursor: pointer; }                                                             /* país visitado */
+.cvbase { fill: var(--map-land); }                                                   /* base de tierra bajo la bandera */
+.cflag { opacity: 0.12; transition: opacity 0.15s ease; }                            /* bandera sutil recortada a la silueta */
+.cborder { fill: transparent; stroke: var(--map-visited-border); stroke-width: 0.6; stroke-opacity: 0.30; transition: stroke 0.15s ease; }
+.cv:hover .cflag { opacity: 0.55; }
+.cv:hover .cborder { stroke: var(--accent); stroke-opacity: 1; stroke-width: 1.1; }
+
+/* Controles de zoom */
+.map-zoom { position: absolute; top: 12px; right: 12px; z-index: 8; display: flex; flex-direction: column; gap: 6px; }
+.map-zoom button {
+  width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; line-height: 1; cursor: pointer; color: var(--fg); font-family: var(--font-body);
+  background: rgba(12,12,13,0.82); border: 1px solid var(--line-2); border-radius: 8px;
+  transition: border-color 0.12s, color 0.12s; backdrop-filter: blur(4px);
 }
-.cv:hover { fill-opacity: 0.72; stroke: var(--accent); stroke-opacity: 1; stroke-width: 0.9; }
+.map-zoom button:hover { border-color: var(--accent); color: var(--accent); }
 .map-tip {
   position: fixed; display: none; pointer-events: none; z-index: 10;
   background: rgba(12,12,13,0.95); border: 1px solid rgba(245,166,35,0.5); border-radius: 8px;

@@ -38,8 +38,12 @@ const tr = projection.translate()
 projection.translate([tr[0] - x0, tr[1] - y0])
 toPath = geoPath(projection)
 const H = Math.ceil(y1 - y0)
+const r = n => Math.round(n * 10) / 10
 const countries = features
-  .map(f => ({ iso: f.properties.iso, name: f.properties.name, d: toPath(f) }))
+  .map(f => {
+    const [[bx0, by0], [bx1, by1]] = toPath.bounds(f)
+    return { iso: f.properties.iso, name: f.properties.name, d: toPath(f), bbox: [r(bx0), r(by0), r(bx1), r(by1)] }
+  })
   .filter(c => c.d)
 mkdirSync('public', { recursive: true })
 writeFileSync('public/countries.svg.json', JSON.stringify({ width: W, height: H, countries }))
