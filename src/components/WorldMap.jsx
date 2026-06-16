@@ -89,7 +89,14 @@ export default function WorldMap({ onSelect }) {
   const hideTip = () => { if (tipRef.current) tipRef.current.style.display = 'none' }
   const click = (c, v) => { if (!draggedRef.current) { hideTip(); onSelect({ id: c.iso, country: v }) } }
 
-  const pins = data ? data.countries.filter(c => c.cen && VISITED_BY_ISO[c.iso]) : []
+  // Pines: países (clic atraviesa al polígono) + microestados sin polígono
+  // (Vaticano/Hong Kong/Singapur), cuyo pin ES clicable por sí mismo.
+  const pins = data
+    ? [
+        ...data.countries.filter(c => c.cen && VISITED_BY_ISO[c.iso]).map(c => ({ iso: c.iso, cen: c.cen, micro: false })),
+        ...(data.micros || []).filter(m => VISITED_BY_ISO[m.iso]).map(m => ({ iso: m.iso, cen: m.cen, micro: true }))
+      ]
+    : []
 
   return (
     <div id="flashback-map" style={{ opacity: data ? 1 : 0, transition: 'opacity 0.45s ease' }}>
@@ -130,11 +137,14 @@ export default function WorldMap({ onSelect }) {
             })}
           </g>
           <g ref={pinsRef} className="pins">
-            {pins.map(c => {
-              const v = VISITED_BY_ISO[c.iso]
+            {pins.map(p => {
+              const v = VISITED_BY_ISO[p.iso]
               const np = v.alpha2 === 'np' // Nepal: bandera no rectangular, sin caja
+              const hit = p.micro
+                ? { onMouseEnter: e => moveTip(e, v), onMouseMove: e => moveTip(e, v), onMouseLeave: hideTip, onClick: () => click({ iso: p.iso }, v) }
+                : {}
               return (
-                <g key={c.iso} className="pin" data-cx={c.cen[0]} data-cy={c.cen[1]} transform={`translate(${c.cen[0]} ${c.cen[1]})`}>
+                <g key={p.iso} className={p.micro ? 'pin pin-i' : 'pin'} data-cx={p.cen[0]} data-cy={p.cen[1]} transform={`translate(${p.cen[0]} ${p.cen[1]})`} {...hit}>
                   <line className="pin-stem" x1="0" y1="0" x2="0" y2="-11" stroke="url(#pinstem)" />
                   <circle className="pin-dot" r="1.5" />
                   <g className="pin-chip" transform="translate(0 -11)" filter={np ? 'url(#pinframe)' : 'url(#pinshadow)'}>

@@ -88,16 +88,26 @@ const countries = features
   })
   .filter(c => c.d)
 
-// AUDITORÍA: cada pin debe caer DENTRO de su país (test punto-en-polígono).
+// Microestados ausentes del dataset 110m (su polígono sería sub-píxel a escala
+// mundial). Se colocan por coordenada real (lon, lat) y se emiten como pines
+// CLICABLES aparte (no tienen polígono debajo que reciba el clic).
+const MICRO = { '336': [12.4534, 41.9029], '344': [114.1694, 22.3193], '702': [103.8198, 1.3521] }
+const presentIds = new Set(countries.map(c => c.iso))
+const micros = Object.entries(MICRO)
+  .filter(([iso]) => VISITED_IDS.has(iso) && !presentIds.has(iso))
+  .map(([iso, ll]) => { const p = projection(ll); return { iso, name: (VISITED.find(v => v.id === iso) || {}).name, cen: [r(p[0]), r(p[1])] } })
+  .filter(m => m.cen[0] === m.cen[0])
+
+// AUDITORÍA: cada pin de país debe caer DENTRO de su país (test punto-en-polígono).
 const featByIso = {}; features.forEach(f => { featByIso[f.properties.iso] = f })
 const withPin = countries.filter(c => c.cen)
 const outside = withPin.filter(c => !inCountry(c.cen, featByIso[c.iso]))
-const absent = [...VISITED_IDS].filter(id => !countries.some(c => c.iso === id))
-console.log(`AUDIT · pines ${withPin.length} · DENTRO ${withPin.length - outside.length} · FUERA ${outside.length}` + (outside.length ? ': ' + outside.map(c => c.name).join(', ') : ''))
-console.log(`AUDIT · sin pin (no están en 110m): ${absent.map(id => (VISITED.find(v => v.id === id) || {}).name).join(', ') || 'ninguno'}`)
+const stillAbsent = [...VISITED_IDS].filter(id => !presentIds.has(id) && !micros.some(m => m.iso === id))
+console.log(`AUDIT · pines país ${withPin.length} · DENTRO ${withPin.length - outside.length} · FUERA ${outside.length}` + (outside.length ? ': ' + outside.map(c => c.name).join(', ') : ''))
+console.log(`AUDIT · microestados (pin por coordenada): ${micros.map(m => m.name).join(', ') || 'ninguno'}` + (stillAbsent.length ? ` · SIN PIN: ${stillAbsent.join(', ')}` : ''))
 
 mkdirSync('public', { recursive: true })
-writeFileSync('public/countries.svg.json', JSON.stringify({ width: W, height: H, countries }))
+writeFileSync('public/countries.svg.json', JSON.stringify({ width: W, height: H, countries, micros }))
 
 // Copiar banderas (4x3) de los países visitados a public/flags/ (para los pines)
 mkdirSync('public/flags', { recursive: true })

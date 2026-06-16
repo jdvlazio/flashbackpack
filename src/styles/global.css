@@ -26,6 +26,7 @@ body {
 
 /* Pines de bandera (capa que NO escala con el zoom; solo se recoloca) */
 .pins { pointer-events: none; }
+.pin-i { pointer-events: auto; cursor: pointer; }   /* microestado: su pin SÍ es clicable */
 .pin-stem { stroke-width: 0.8; }             /* tallo: color = degradado #pinstem (se desvanece) */
 .pin-stem-stop { stop-color: var(--accent); }
 .pin-dot { fill: var(--accent); }            /* punto de anclaje (r=1.5, discreto) */
