@@ -101,6 +101,15 @@ export default function WorldMap({ onSelect }) {
             <filter id="pinshadow" x="-60%" y="-60%" width="220%" height="220%">
               <feDropShadow dx="0" dy="1" stdDeviation="1.4" floodColor="#000" floodOpacity="0.6" />
             </filter>
+            {/* Marco crema que SIGUE la forma (para Nepal, no rectangular): dilata
+                la silueta, la rellena de crema y la pone detrás + sombra. */}
+            <filter id="pinframe" x="-80%" y="-80%" width="260%" height="260%">
+              <feMorphology in="SourceAlpha" operator="dilate" radius="1" result="dil" />
+              <feFlood className="pin-frame-flood" result="cream" />
+              <feComposite in="cream" in2="dil" operator="in" result="frame" />
+              <feMerge result="framed"><feMergeNode in="frame" /><feMergeNode in="SourceGraphic" /></feMerge>
+              <feDropShadow in="framed" dx="0" dy="1" stdDeviation="1.4" floodColor="#000" floodOpacity="0.6" />
+            </filter>
             {/* Tallo del pin: degradado ámbar que se desvanece hacia el chip */}
             <linearGradient id="pinstem" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="-11">
               <stop className="pin-stem-stop" offset="0" stopOpacity="0.8" />
@@ -128,7 +137,7 @@ export default function WorldMap({ onSelect }) {
                 <g key={c.iso} className="pin" data-cx={c.cen[0]} data-cy={c.cen[1]} transform={`translate(${c.cen[0]} ${c.cen[1]})`}>
                   <line className="pin-stem" x1="0" y1="0" x2="0" y2="-11" stroke="url(#pinstem)" />
                   <circle className="pin-dot" r="1.5" />
-                  <g className="pin-chip" transform="translate(0 -11)" filter="url(#pinshadow)">
+                  <g className="pin-chip" transform="translate(0 -11)" filter={np ? 'url(#pinframe)' : 'url(#pinshadow)'}>
                     {np ? (
                       <image className="pin-flag" href={`${BASE}flags/np.svg`} x="-8" y="-21" width="16" height="20" preserveAspectRatio="xMidYMid meet" />
                     ) : (

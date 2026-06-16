@@ -6,7 +6,10 @@ import { writeFileSync, readFileSync, mkdirSync, copyFileSync, existsSync } from
 import { createRequire } from 'module'
 import { VISITED } from '../src/data/countries.js'
 import { flagToAlpha2 } from '../src/lib/flags.js'
-const worldCountries = createRequire(import.meta.url)('world-countries')
+const require = createRequire(import.meta.url)
+const worldCountries = require('world-countries')
+const _polylabel = require('polylabel')
+const polylabel = _polylabel.default || _polylabel
 
 // ISO numérico -> clave de continente (para colorear la tierra por continente).
 const REGION_KEY = { Europe: 'eu', Asia: 'as', Americas: 'am', Africa: 'af', Oceania: 'oc' }
@@ -46,16 +49,53 @@ toPath = geoPath(projection)
 const H = Math.ceil(y1 - y0)
 const VISITED_IDS = new Set(VISITED.map(v => v.id))
 const r = n => Math.round(n * 10) / 10
+
+// Colocación del pin = CENTRO VISUAL (polylabel) del polígono MÁS GRANDE del
+// país, proyectado. Garantiza un punto DENTRO de la tierra; el centroide
+// ponderado por área falla con islas lejanas o formas cóncavas (Noruega con
+// Svalbard, USA con Alaska/Hawái, etc.).
+const ringArea = ring => { let a = 0; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) a += ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1]; return a / 2 }
+const polysOf = f => f.geometry ? (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : []) : []
+const projectRings = poly => poly.map(ring => ring.map(pt => projection(pt)).filter(p => p && isFinite(p[0]) && isFinite(p[1]))).filter(ring => ring.length >= 4)
+const largestProjPoly = f => {
+  let best = null, bestArea = -1
+  for (const poly of polysOf(f)) {
+    const proj = projectRings(poly)
+    if (proj.length && Math.abs(ringArea(proj[0])) > bestArea) { bestArea = Math.abs(ringArea(proj[0])); best = proj }
+  }
+  return best
+}
+const pinPoint = f => {
+  const best = largestProjPoly(f)
+  if (!best) return null
+  const xs = best[0].map(p => p[0])
+  if (Math.max(...xs) - Math.min(...xs) > W * 0.6) return null // wrap antimeridiano -> descarta
+  const p = polylabel(best, 1)
+  return [r(p[0]), r(p[1])]
+}
+const inRing = (pt, ring) => { const [x, y] = pt; let inside = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const [xi, yi] = ring[i], [xj, yj] = ring[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside } return inside }
+const inCountry = (pt, f) => polysOf(f).some(poly => { const proj = projectRings(poly); return proj[0] && inRing(pt, proj[0]) })
+
 const countries = features
   .map(f => {
     const c = { iso: f.properties.iso, name: f.properties.name, cont: CONT_BY_ISO[f.properties.iso] || 'xx', d: toPath(f) }
-    if (VISITED_IDS.has(f.properties.iso)) { // centroide proyectado solo para visitados (posiciona el pin)
-      const [cx, cy] = toPath.centroid(f)
-      if (cx === cx && cy === cy) c.cen = [r(cx), r(cy)] // NaN-safe
+    if (VISITED_IDS.has(f.properties.iso)) {
+      let pp = pinPoint(f)
+      if (!pp) { const [cx, cy] = toPath.centroid(f); if (cx === cx) pp = [r(cx), r(cy)] } // fallback
+      if (pp) c.cen = pp
     }
     return c
   })
   .filter(c => c.d)
+
+// AUDITORÍA: cada pin debe caer DENTRO de su país (test punto-en-polígono).
+const featByIso = {}; features.forEach(f => { featByIso[f.properties.iso] = f })
+const withPin = countries.filter(c => c.cen)
+const outside = withPin.filter(c => !inCountry(c.cen, featByIso[c.iso]))
+const absent = [...VISITED_IDS].filter(id => !countries.some(c => c.iso === id))
+console.log(`AUDIT · pines ${withPin.length} · DENTRO ${withPin.length - outside.length} · FUERA ${outside.length}` + (outside.length ? ': ' + outside.map(c => c.name).join(', ') : ''))
+console.log(`AUDIT · sin pin (no están en 110m): ${absent.map(id => (VISITED.find(v => v.id === id) || {}).name).join(', ') || 'ninguno'}`)
+
 mkdirSync('public', { recursive: true })
 writeFileSync('public/countries.svg.json', JSON.stringify({ width: W, height: H, countries }))
 
