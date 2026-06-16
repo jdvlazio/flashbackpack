@@ -2,7 +2,7 @@
 // Uso: node scripts/build-geo.mjs   (requiere red para el dataset)
 import { feature } from 'topojson-client'
 import { geoMercator, geoPath } from 'd3-geo'
-import { writeFileSync, mkdirSync, copyFileSync, existsSync } from 'fs'
+import { writeFileSync, readFileSync, mkdirSync, copyFileSync, existsSync } from 'fs'
 import { createRequire } from 'module'
 import { VISITED } from '../src/data/countries.js'
 import { flagToAlpha2 } from '../src/lib/flags.js'
@@ -64,7 +64,12 @@ mkdirSync('public/flags', { recursive: true })
 let copied = 0, missing = []
 for (const code of new Set(VISITED.map(v => flagToAlpha2(v.flag)))) {
   const src = `node_modules/flag-icons/flags/4x3/${code}.svg`
-  if (existsSync(src)) { copyFileSync(src, `public/flags/${code}.svg`); copied++ }
-  else missing.push(code)
+  if (!existsSync(src)) { missing.push(code); continue }
+  if (code === 'np') {
+    // Nepal: única bandera no rectangular. Recortamos el viewBox al banderín
+    // (fondo transparente) para mostrar su forma real sin caja ni recorte.
+    writeFileSync('public/flags/np.svg', readFileSync(src, 'utf8').replace('viewBox="0 0 640 480"', 'viewBox="0 0 380 480"'))
+  } else copyFileSync(src, `public/flags/${code}.svg`)
+  copied++
 }
 console.log(`OK · ${countries.length} paths · ${copied} banderas` + (missing.length ? ` · faltan: ${missing.join(',')}` : ''))

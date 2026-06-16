@@ -60,7 +60,7 @@ export default function WorldMap({ onSelect }) {
   useEffect(() => {
     if (!data || !svgRef.current || !gRef.current) return
     const z = zoom()
-      .scaleExtent([1, 9])
+      .scaleExtent([1, 24]) // zoom alto: permite separar pares muy juntos (Israel/Palestina)
       .translateExtent([[0, 0], [data.width, data.height]])
       .on('start', () => { draggedRef.current = false })
       .on('zoom', e => {
@@ -101,6 +101,11 @@ export default function WorldMap({ onSelect }) {
             <filter id="pinshadow" x="-60%" y="-60%" width="220%" height="220%">
               <feDropShadow dx="0" dy="1" stdDeviation="1.4" floodColor="#000" floodOpacity="0.6" />
             </filter>
+            {/* Tallo del pin: degradado ámbar que se desvanece hacia el chip */}
+            <linearGradient id="pinstem" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="-11">
+              <stop className="pin-stem-stop" offset="0" stopOpacity="0.8" />
+              <stop className="pin-stem-stop" offset="1" stopOpacity="0.06" />
+            </linearGradient>
           </defs>
           <g ref={gRef}>
             {data.countries.map(c => {
@@ -118,13 +123,20 @@ export default function WorldMap({ onSelect }) {
           <g ref={pinsRef} className="pins">
             {pins.map(c => {
               const v = VISITED_BY_ISO[c.iso]
+              const np = v.alpha2 === 'np' // Nepal: bandera no rectangular, sin caja
               return (
                 <g key={c.iso} className="pin" data-cx={c.cen[0]} data-cy={c.cen[1]} transform={`translate(${c.cen[0]} ${c.cen[1]})`}>
-                  <line className="pin-stem" x1="0" y1="0" x2="0" y2="-11" />
-                  <circle className="pin-dot" r="2.4" />
+                  <line className="pin-stem" x1="0" y1="0" x2="0" y2="-11" stroke="url(#pinstem)" />
+                  <circle className="pin-dot" r="1.5" />
                   <g className="pin-chip" transform="translate(0 -11)" filter="url(#pinshadow)">
-                    <rect className="pin-bg" x="-13" y="-20" width="26" height="20" rx="4" />
-                    <image className="pin-flag" href={`${BASE}flags/${v.alpha2}.svg`} x="-12" y="-19" width="24" height="18" clipPath="url(#pinclip)" preserveAspectRatio="xMidYMid slice" />
+                    {np ? (
+                      <image className="pin-flag" href={`${BASE}flags/np.svg`} x="-8" y="-21" width="16" height="20" preserveAspectRatio="xMidYMid meet" />
+                    ) : (
+                      <>
+                        <rect className="pin-bg" x="-13" y="-20" width="26" height="20" rx="4" />
+                        <image className="pin-flag" href={`${BASE}flags/${v.alpha2}.svg`} x="-12" y="-19" width="24" height="18" clipPath="url(#pinclip)" preserveAspectRatio="xMidYMid slice" />
+                      </>
+                    )}
                   </g>
                 </g>
               )
