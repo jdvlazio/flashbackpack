@@ -14,6 +14,7 @@ export default function Passport({ onSelect }) {
               {entries.map(ctry => (
                 <button
                   key={ctry.id}
+                  className="passport-flag"
                   onClick={() => onSelect({ id: ctry.id, country: ctry })}
                   title={ctry.name}
                   style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem 0.2rem', borderRadius: '6px', fontFamily: 'inherit', position: 'relative', transition: 'background 0.12s' }}

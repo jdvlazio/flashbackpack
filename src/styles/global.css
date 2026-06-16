@@ -16,6 +16,11 @@ body {
 .maplibregl-ctrl-group button { background: none !important; border-bottom: 1px solid rgba(237,229,221,0.1) !important; }
 .maplibregl-ctrl-icon { filter: invert(1) opacity(0.6); }
 
+/* Hover de banderas del pasaporte: tinte ámbar + nombre en ámbar */
+.passport-flag span { transition: color 0.12s; }
+.passport-flag:hover { background: rgba(245,166,35,0.10) !important; }
+.passport-flag:hover span:nth-of-type(2) { color: var(--accent) !important; }
+
 @keyframes fadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 

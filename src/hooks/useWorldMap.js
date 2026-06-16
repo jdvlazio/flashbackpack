@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { VISITED } from '../data/countries.js'
-import { COUNTRY_FILL, VISITED_IDS } from '../data/mapColors.js'
+import { VISITED_IDS } from '../data/mapColors.js'
 
 // Mapa AUTOCONTENIDO: dibuja los países desde un GeoJSON propio (servido por
 // nuestro hosting, public/countries.geo.json) con un estilo MapLibre mínimo e
@@ -21,6 +21,16 @@ export function useWorldMap(wrapRef, onSelect) {
     el.style.opacity = '0'
     el.style.transition = 'opacity 0.45s ease'
 
+    // Paleta del mapa leída de los tokens CSS (única fuente de la paleta).
+    const root = getComputedStyle(document.documentElement)
+    const tok = (n, fb) => (root.getPropertyValue(n).trim() || fb)
+    const MAP_BG = tok('--map-bg', '#100f0d')
+    const MAP_LAND = tok('--map-land', '#1c1a16')
+    const MAP_LAND_BORDER = tok('--map-land-border', '#2c2820')
+    const MAP_VISITED = tok('--map-visited', '#d8d2c4')
+    const MAP_VISITED_BORDER = tok('--map-visited-border', '#f4f1ea')
+    const ACCENT = tok('--accent', '#f5a623')
+
     // Fetch del GeoJSON en paralelo con la carga diferida de MapLibre.
     const geoPromise = fetch(`${import.meta.env.BASE_URL}countries.geo.json`).then(r => r.json())
 
@@ -33,7 +43,7 @@ export function useWorldMap(wrapRef, onSelect) {
         style: {
           version: 8,
           sources: {},
-          layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#0a0a0a' } }],
+          layers: [{ id: 'bg', type: 'background', paint: { 'background-color': MAP_BG } }],
         },
         center: [15, 10], zoom: 1.3, minZoom: 1, maxZoom: 6,
         attributionControl: false,
@@ -64,21 +74,23 @@ export function useWorldMap(wrapRef, onSelect) {
 
         map.addSource('countries', { type: 'geojson', data: geo, promoteId: 'iso' })
 
-        // Base: todos los países en gris muy oscuro (tierra vs océano) + borde tenue.
-        map.addLayer({ id: 'land', type: 'fill', source: 'countries', paint: { 'fill-color': '#16161a' } })
-        map.addLayer({ id: 'land-border', type: 'line', source: 'countries', paint: { 'line-color': '#26262c', 'line-width': 0.5 } })
+        // Base: tierra (no visitados) en tono oscuro cálido + borde tenue.
+        map.addLayer({ id: 'land', type: 'fill', source: 'countries', paint: { 'fill-color': MAP_LAND } })
+        map.addLayer({ id: 'land-border', type: 'line', source: 'countries', paint: { 'line-color': MAP_LAND_BORDER, 'line-width': 0.5 } })
 
-        // Visitados: relleno gris por país (mismos valores que el baseline).
-        const fillExpr = ['match', ['get', 'iso'], ...Object.entries(COUNTRY_FILL).flatMap(([id, hex]) => [id, hex]), '#16161a']
+        // Visitados: relleno crema; al pasar el cursor se tiñe de ámbar (acento).
         map.addLayer({
           id: 'visited-fill', type: 'fill', source: 'countries',
           filter: ['in', ['get', 'iso'], ['literal', VISITED_IDS]],
-          paint: { 'fill-color': fillExpr, 'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 1.0, 0.85] },
+          paint: {
+            'fill-color': ['case', ['boolean', ['feature-state', 'hover'], false], ACCENT, MAP_VISITED],
+            'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 1.0, 0.85],
+          },
         })
         map.addLayer({
           id: 'visited-border', type: 'line', source: 'countries',
           filter: ['in', ['get', 'iso'], ['literal', VISITED_IDS]],
-          paint: { 'line-color': '#f5f5f7', 'line-width': 0.5, 'line-opacity': 0.3 },
+          paint: { 'line-color': MAP_VISITED_BORDER, 'line-width': 0.5, 'line-opacity': 0.3 },
         })
 
         let hovered = null

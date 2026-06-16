@@ -1,5 +1,3 @@
-// Generado del baseline (fillExpr). Color de relleno por país (ISO numérico).
-export const COUNTRY_FILL = {"116":"#b2b2b6","156":"#aaaaae","158":"#aaaab0","170":"#8e8e93","203":"#dcdce1","208":"#ececef","246":"#eeeeef","250":"#e8e8ed","275":"#a2a2a6","276":"#e4e4e9","336":"#dcdce1","344":"#a6a6aa","348":"#dadade","356":"#b0b0b4","376":"#b6b6ba","380":"#e0e0e5","410":"#a6a6aa","418":"#aeaeb2","484":"#8a8a8f","524":"#acacb0","528":"#e2e2e7","578":"#eaeaef","620":"#dcdce0","643":"#d8d8dc","702":"#b4b4b8","703":"#e4e4e9","704":"#a2a2a6","724":"#e8e8ed","752":"#e6e6eb","756":"#e0e0e5","764":"#aaaaae","792":"#aeaeb2","826":"#d4d4d8","840":"#929297","056":"#dedee3","040":"#e8e2e9","032":"#86868b","036":"#636366"};
-
-// Ids (ISO numérico) de países visitados.
+// Ids (ISO numérico) de países visitados. El color de relleno ahora es único
+// (token --map-visited) con hover ámbar — ya no hay color por país.
 export const VISITED_IDS = ["724","250","276","756","203","208","578","752","528","056","348","040","703","380","336","246","643","826","620","792","156","344","704","116","418","764","410","376","275","356","524","702","158","170","484","032","840","036"];
