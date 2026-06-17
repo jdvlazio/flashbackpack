@@ -26,13 +26,13 @@ export default function GalleryModal({ active, photos, onClose, onOpenLightbox }
           </div>
           <button onClick={onClose} aria-label="Cerrar galería" style={{ background: 'none', border: '0.5px solid var(--line-strong)', color: 'var(--c-muted-2)', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', flexShrink: 0 }}>✕</button>
         </div>
-        <div className="gallery-grid" style={{ columns: '3 200px', gap: '6px' }}>
-          {photos.map((url, i) => (
+        <div className="gallery-grid">
+          {photos.map((p, i) => (
             <Photo
-              key={url}
-              url={url}
+              key={p.u}
+              photo={p}
               alt={`${active.country.name} — foto ${i + 1}`}
-              onClick={() => onOpenLightbox(url)}
+              onClick={() => onOpenLightbox(p)}
             />
           ))}
         </div>

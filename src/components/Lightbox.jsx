@@ -18,7 +18,7 @@ export default function Lightbox({ lightbox, photos, countryName, onClose, onPre
       style={{ position: 'fixed', inset: 0, background: 'var(--overlay-2)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out', animation: 'fadeIn 0.15s ease', outline: 'none' }}
       onClick={onClose}
     >
-      <img src={cloudinary(lightbox, 'w_1600,c_limit')} alt={`${countryName ? countryName + ' — ' : ''}foto ${i + 1} de ${photos.length}`} className="lb-img" style={{ maxWidth: '60vw', maxHeight: '60vh', objectFit: 'contain', borderRadius: '4px', display: 'block' }} onClick={e => e.stopPropagation()} />
+      <img src={cloudinary(lightbox.u, 'w_1600,c_limit')} alt={`${countryName ? countryName + ' — ' : ''}foto ${i + 1} de ${photos.length}`} className="lb-img" style={{ maxWidth: '60vw', maxHeight: '60vh', objectFit: 'contain', borderRadius: '4px', display: 'block' }} onClick={e => e.stopPropagation()} />
       <button onClick={e => { e.stopPropagation(); onClose() }} aria-label="Cerrar visor" style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'var(--btn-bg)', border: '0.5px solid var(--line-strong)', color: 'var(--c-muted-2)', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}>✕</button>
       <button onClick={e => { e.stopPropagation(); onPrev() }} aria-label="Foto anterior" className="lb-arrow" style={{ ...arrow, left: '1.5rem' }}>←</button>
       <button onClick={e => { e.stopPropagation(); onNext() }} aria-label="Foto siguiente" className="lb-arrow" style={{ ...arrow, right: '1.5rem' }}>→</button>

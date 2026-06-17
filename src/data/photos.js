@@ -48,13 +48,17 @@ const PHOTO_CACHE = {};
 export async function loadPhotos(country){
   const id = country && country.id;
   if(PHOTO_CACHE[id]) return PHOTO_CACHE[id];
-  let urls = [];
+  let photos = [];
   try {
     const res = await fetch(`/photos?folder=${encodeURIComponent(country.name)}`);
-    if(res.ok){ const data = await res.json(); if(Array.isArray(data.urls)) urls = data.urls; }
+    if(res.ok){
+      const data = await res.json();
+      if(Array.isArray(data.photos)) photos = data.photos;          // {u,w,h}
+      else if(Array.isArray(data.urls)) photos = data.urls.map(u=>({u}));
+    }
   } catch(e){ /* sin red / función: usar fallback */ }
-  if(!urls.length) urls = REAL_PHOTOS[id] || [];
-  PHOTO_CACHE[id] = urls;
+  if(!photos.length) photos = (REAL_PHOTOS[id] || []).map(u=>({u})); // fallback sin dimensiones
+  PHOTO_CACHE[id] = photos;
   return PHOTO_CACHE[id];
 }
 export const TOTAL_PHOTOS = Object.values(REAL_PHOTOS).reduce((s,a)=>s+a.length,0);

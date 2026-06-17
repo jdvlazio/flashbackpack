@@ -22,11 +22,12 @@ export async function onRequestGet(context) {
     const res = await fetch(api, { headers: { Authorization: `Basic ${creds}` } })
     const data = await res.json()
     if (data.error) return json({ error: data.error.message || 'cloudinary error' }, 502)
-    const urls = (data.resources || [])
+    // Cada foto: url + ancho/alto reales (para justificar la galería sin saltos).
+    const photos = (data.resources || [])
       .sort((a, b) => String(a.public_id).localeCompare(String(b.public_id)))
-      .map(r => `https://res.cloudinary.com/${cloud}/image/upload/q_auto,f_auto/${r.public_id}`)
+      .map(r => ({ u: `https://res.cloudinary.com/${cloud}/image/upload/q_auto,f_auto/${r.public_id}`, w: r.width, h: r.height }))
     // Cache 10 min en el edge: equilibra "aparecen solas" con no llamar a la API en cada visita.
-    return json({ folder, total: urls.length, urls }, 200, { 'Cache-Control': 'public, max-age=600' })
+    return json({ folder, total: photos.length, photos, urls: photos.map(p => p.u) }, 200, { 'Cache-Control': 'public, max-age=600' })
   } catch (e) {
     return json({ error: String(e) }, 502)
   }
