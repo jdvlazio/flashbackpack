@@ -8,13 +8,24 @@ import { TOTAL_PHOTOS } from '../data/photos.js'
 export default function Stats() {
   const totalC = VISITED.length
   const conts = [...new Set(VISITED.map(v => v.continent))].length
-  const [photos, setPhotos] = useState(TOTAL_PHOTOS)
+  // Valor inicial = último conteo REAL recordado (localStorage); así quien ya
+  // visitó la web ve el número correcto al instante, sin el parpadeo del
+  // estático. Solo la primera visita de todas cae al fallback derivado.
+  const [photos, setPhotos] = useState(() => {
+    try { const c = localStorage.getItem('fb_photos'); if (c) return Number(c) } catch { /* ignore */ }
+    return TOTAL_PHOTOS
+  })
 
   useEffect(() => {
     fetch('/stats')
       .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (d && typeof d.photos === 'number' && d.photos > 0) setPhotos(d.photos) })
-      .catch(() => { /* mantiene el fallback estático */ })
+      .then(d => {
+        if (d && typeof d.photos === 'number' && d.photos > 0) {
+          setPhotos(d.photos)
+          try { localStorage.setItem('fb_photos', String(d.photos)) } catch { /* ignore */ }
+        }
+      })
+      .catch(() => { /* mantiene el fallback */ })
   }, [])
 
   return (

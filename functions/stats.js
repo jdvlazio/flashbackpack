@@ -1,9 +1,17 @@
 // Cloudflare Pages Function — GET /stats
-// Devuelve el total REAL de fotos en Cloudinary (cuenta todas las imágenes,
-// paginando). Así el contador del encabezado refleja lo que de verdad hay.
-// Credenciales en variables de entorno (igual que /photos); nunca al cliente.
+// Devuelve el total REAL de fotos en Cloudinary. Antes paginaba TODOS los
+// recursos (varias llamadas secuenciales → ~3s) y no se cacheaba. Ahora:
+//  - 1 sola llamada a la Search API (devuelve total_count directamente)
+//  - se cachea en el borde (Cache API) → respuestas siguientes casi instantáneas
+// Credenciales en variables de entorno; nunca llegan al cliente.
 export async function onRequestGet(context) {
-  const { env } = context
+  const { request, env } = context
+  const cache = caches.default
+  const cacheKey = new Request(new URL('/stats', request.url).toString(), { method: 'GET' })
+
+  const hit = await cache.match(cacheKey)
+  if (hit) return hit
+
   const cloud = env.CLOUDINARY_CLOUD || 'deb88gq1x'
   const key = env.CLOUDINARY_KEY
   const secret = env.CLOUDINARY_SECRET
@@ -11,20 +19,17 @@ export async function onRequestGet(context) {
 
   const creds = btoa(`${key}:${secret}`)
   try {
-    let total = 0, cursor = null, pages = 0
-    do {
-      const u = new URL(`https://api.cloudinary.com/v1_1/${cloud}/resources/image`)
-      u.searchParams.set('max_results', '500')
-      if (cursor) u.searchParams.set('next_cursor', cursor)
-      const res = await fetch(u, { headers: { Authorization: `Basic ${creds}` } })
-      const data = await res.json()
-      if (data.error) return json({ error: data.error.message || 'cloudinary error' }, 502)
-      total += (data.resources || []).length
-      cursor = data.next_cursor
-      pages++
-    } while (cursor && pages < 8) // tope de seguridad (8×500 = 4000)
-    // Cache 1h: el conteo no cambia a menudo.
-    return json({ photos: total }, 200, { 'Cache-Control': 'public, max-age=3600' })
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/resources/search`, {
+      method: 'POST',
+      headers: { Authorization: `Basic ${creds}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expression: 'resource_type:image', max_results: 1 }),
+    })
+    const data = await res.json()
+    if (data.error) return json({ error: data.error.message || 'cloudinary error' }, 502)
+    // Cache 10 min: rápido para las visitas, y refleja fotos nuevas en poco tiempo.
+    const resp = json({ photos: data.total_count || 0 }, 200, { 'Cache-Control': 'public, max-age=600' })
+    context.waitUntil(cache.put(cacheKey, resp.clone()))
+    return resp
   } catch (e) {
     return json({ error: String(e) }, 502)
   }
