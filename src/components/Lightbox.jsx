@@ -14,6 +14,7 @@ export default function Lightbox({ lightbox, photos, country, onClose, onPrev, o
   const dragRef = useRef(null)                 // arrastre para desplazar en zoom
   const movedRef = useRef(false)
   const touchRef = useRef(null)                // swipe para navegar
+  const imgRef = useRef(null)
 
   const full = cloudinary(lightbox.u, 'w_1600,c_limit')
   const lqip = cloudinary(lightbox.u, 'w_40,e_blur:800,q_20')
@@ -22,7 +23,9 @@ export default function Lightbox({ lightbox, photos, country, onClose, onPrev, o
   // así no aparece el recuadro pequeño del blur-up ni hay salto.
   const ar = lightbox.w && lightbox.h ? lightbox.w / lightbox.h : null
 
-  useEffect(() => { setLoaded(false); setZoom(null); setPan({ x: 0, y: 0 }) }, [lightbox.u])
+  // Reinicia zoom y, si la imagen ya está en caché (complete), marca loaded para
+  // que el blur se desvanezca igual (si no, onLoad no dispara y el borroso se queda).
+  useEffect(() => { setZoom(null); setPan({ x: 0, y: 0 }); const im = imgRef.current; setLoaded(!!(im && im.complete && im.naturalWidth)) }, [lightbox.u])
 
   // Precarga la anterior y la siguiente → navegar es instantáneo.
   useEffect(() => {
@@ -55,7 +58,10 @@ export default function Lightbox({ lightbox, photos, country, onClose, onPrev, o
   }
 
   const transform = zoom ? `translate(${pan.x}px, ${pan.y}px) scale(2.4)` : 'none'
-  const imgDyn = { opacity: loaded ? 1 : 0, transform, transformOrigin: zoom ? `${zoom.ox}% ${zoom.oy}%` : 'center', transition: dragRef.current ? 'none' : 'opacity 0.4s ease, transform 0.25s ease', cursor: zoom ? 'grab' : 'zoom-in' }
+  // La foto nítida va SIEMPRE visible (encima); el borroso es solo placeholder
+  // detrás y se tapa al cargar. Así no depende de que onLoad dispare (las
+  // imágenes cacheadas no siempre lo hacen) → nunca se queda en borroso.
+  const imgDyn = { opacity: 1, transform, transformOrigin: zoom ? `${zoom.ox}% ${zoom.oy}%` : 'center', transition: dragRef.current ? 'none' : 'transform 0.25s ease', cursor: zoom ? 'grab' : 'zoom-in' }
 
   return (
     <div
@@ -67,12 +73,12 @@ export default function Lightbox({ lightbox, photos, country, onClose, onPrev, o
       onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerLeave={endDrag}
     >
       {ar ? (
-        <div className="lb-stage" onClick={e => e.stopPropagation()} style={{ position: 'relative', width: `min(var(--lb-maxw), calc(var(--lb-maxh) * ${ar}))`, aspectRatio: String(ar) }}>
+        <div className="lb-stage" onClick={e => e.stopPropagation()} style={{ position: 'relative', width: `min(var(--lb-maxw), calc(var(--lb-maxh) * ${ar}))`, aspectRatio: String(ar), overflow: 'hidden', borderRadius: '4px' }}>
           <img src={lqip} aria-hidden="true" className="lb-layer lb-blur" style={{ opacity: loaded ? 0 : 1 }} />
-          <img src={full} alt={cap} className="lb-layer" onLoad={() => setLoaded(true)} onClick={toggleZoom} onPointerDown={onPointerDown} style={imgDyn} />
+          <img ref={imgRef} src={full} alt={cap} className="lb-layer" onLoad={() => setLoaded(true)} onClick={toggleZoom} onPointerDown={onPointerDown} style={imgDyn} />
         </div>
       ) : (
-        <img src={full} alt={cap} className="lb-img" onClick={toggleZoom} onPointerDown={onPointerDown} onLoad={() => setLoaded(true)} style={imgDyn} />
+        <img ref={imgRef} src={full} alt={cap} className="lb-img" onClick={toggleZoom} onPointerDown={onPointerDown} onLoad={() => setLoaded(true)} style={imgDyn} />
       )}
       <button onClick={e => { e.stopPropagation(); onClose() }} aria-label="Cerrar visor" style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'var(--btn-bg)', border: '0.5px solid var(--line-strong)', color: 'var(--c-muted-2)', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', zIndex: 2 }}>✕</button>
       <button onClick={e => { e.stopPropagation(); onPrev() }} aria-label="Foto anterior" className="lb-arrow" style={{ ...arrow, left: '1.5rem' }}>←</button>
