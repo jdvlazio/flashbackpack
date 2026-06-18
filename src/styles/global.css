@@ -66,9 +66,13 @@ body {
 .gphoto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 0.5s ease; }
 .gphoto-err { display: flex; align-items: center; justify-content: center; color: var(--c-dim); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; }
 
-/* Lightbox: visor grande, blur-up y pie con país/año/contador */
-.lb-img { max-width: 90vw; max-height: 86vh; object-fit: contain; border-radius: 4px; display: block; }
-.lb-blur { filter: blur(14px); pointer-events: none; }
+/* Lightbox: visor grande, blur-up y pie con país/año/contador.
+   La caja se dimensiona por proporción (--lb-maxw/h) → el blur llena el espacio
+   correcto antes de cargar (sin recuadro pequeño ni salto). */
+.lb-overlay { --lb-maxw: 90vw; --lb-maxh: 86vh; }
+.lb-layer { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 4px; display: block; }
+.lb-blur { filter: blur(14px); pointer-events: none; transition: opacity 0.4s ease; }
+.lb-img { max-width: var(--lb-maxw); max-height: var(--lb-maxh); object-fit: contain; border-radius: 4px; display: block; }
 .lb-cap { position: absolute; bottom: 1.3rem; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 0.9rem; font-family: var(--font-body); font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--c-muted-2); white-space: nowrap; }
 .lb-count { color: var(--c-dim); }
 
@@ -98,5 +102,5 @@ body {
 }
 
 @media (max-width: 768px) {
-  .lb-img { max-width: 94vw !important; max-height: 80vh !important; }
+  .lb-overlay { --lb-maxw: 94vw; --lb-maxh: 80vh; }
 }

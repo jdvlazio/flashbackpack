@@ -18,8 +18,10 @@ export default function Lightbox({ lightbox, photos, country, onClose, onPrev, o
   const full = cloudinary(lightbox.u, 'w_1600,c_limit')
   const lqip = cloudinary(lightbox.u, 'w_40,e_blur:800,q_20')
   const cap = `${country?.name ? country.name + ' — ' : ''}foto ${i + 1} de ${photos.length}`
+  // Proporción conocida (de /photos) → dimensionamos la caja ANTES de cargar,
+  // así no aparece el recuadro pequeño del blur-up ni hay salto.
+  const ar = lightbox.w && lightbox.h ? lightbox.w / lightbox.h : null
 
-  // Al cambiar de foto: reinicia blur-up y zoom.
   useEffect(() => { setLoaded(false); setZoom(null); setPan({ x: 0, y: 0 }) }, [lightbox.u])
 
   // Precarga la anterior y la siguiente → navegar es instantáneo.
@@ -29,7 +31,7 @@ export default function Lightbox({ lightbox, photos, country, onClose, onPrev, o
 
   const toggleZoom = e => {
     e.stopPropagation()
-    if (movedRef.current) { movedRef.current = false; return } // fue arrastre, no clic
+    if (movedRef.current) { movedRef.current = false; return }
     if (zoom) { setZoom(null); setPan({ x: 0, y: 0 }); return }
     const r = e.currentTarget.getBoundingClientRect()
     setZoom({ ox: ((e.clientX - r.left) / r.width) * 100, oy: ((e.clientY - r.top) / r.height) * 100 })
@@ -43,7 +45,6 @@ export default function Lightbox({ lightbox, photos, country, onClose, onPrev, o
   }
   const endDrag = () => { dragRef.current = null }
 
-  // Swipe horizontal para navegar (solo si no está ampliada).
   const onTouchStart = e => { if (!zoom && e.touches[0]) touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }
   const onTouchEnd = e => {
     if (zoom || !touchRef.current || !e.changedTouches[0]) return
@@ -54,25 +55,25 @@ export default function Lightbox({ lightbox, photos, country, onClose, onPrev, o
   }
 
   const transform = zoom ? `translate(${pan.x}px, ${pan.y}px) scale(2.4)` : 'none'
+  const imgDyn = { opacity: loaded ? 1 : 0, transform, transformOrigin: zoom ? `${zoom.ox}% ${zoom.oy}%` : 'center', transition: dragRef.current ? 'none' : 'opacity 0.4s ease, transform 0.25s ease', cursor: zoom ? 'grab' : 'zoom-in' }
 
   return (
     <div
       ref={ref} role="dialog" aria-modal="true" aria-label="Visor de imagen" tabIndex={-1}
+      className="lb-overlay"
       style={{ position: 'fixed', inset: 0, background: 'var(--overlay-2)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.15s ease', outline: 'none', cursor: 'zoom-out', touchAction: 'none' }}
       onClick={onClose}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}
       onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerLeave={endDrag}
     >
-      <div className="lb-stage" onClick={e => e.stopPropagation()} style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <img src={lqip} aria-hidden="true" className="lb-img lb-blur" style={{ position: 'absolute', opacity: loaded ? 0 : 1, transition: 'opacity 0.4s ease' }} />
-        <img
-          src={full} alt={cap} className="lb-img"
-          onLoad={() => setLoaded(true)}
-          onClick={toggleZoom}
-          onPointerDown={onPointerDown}
-          style={{ opacity: loaded ? 1 : 0, transform, transformOrigin: zoom ? `${zoom.ox}% ${zoom.oy}%` : 'center', transition: dragRef.current ? 'none' : 'opacity 0.4s ease, transform 0.25s ease', cursor: zoom ? 'grab' : 'zoom-in' }}
-        />
-      </div>
+      {ar ? (
+        <div className="lb-stage" onClick={e => e.stopPropagation()} style={{ position: 'relative', width: `min(var(--lb-maxw), calc(var(--lb-maxh) * ${ar}))`, aspectRatio: String(ar) }}>
+          <img src={lqip} aria-hidden="true" className="lb-layer lb-blur" style={{ opacity: loaded ? 0 : 1 }} />
+          <img src={full} alt={cap} className="lb-layer" onLoad={() => setLoaded(true)} onClick={toggleZoom} onPointerDown={onPointerDown} style={imgDyn} />
+        </div>
+      ) : (
+        <img src={full} alt={cap} className="lb-img" onClick={toggleZoom} onPointerDown={onPointerDown} onLoad={() => setLoaded(true)} style={imgDyn} />
+      )}
       <button onClick={e => { e.stopPropagation(); onClose() }} aria-label="Cerrar visor" style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'var(--btn-bg)', border: '0.5px solid var(--line-strong)', color: 'var(--c-muted-2)', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', zIndex: 2 }}>✕</button>
       <button onClick={e => { e.stopPropagation(); onPrev() }} aria-label="Foto anterior" className="lb-arrow" style={{ ...arrow, left: '1.5rem' }}>←</button>
       <button onClick={e => { e.stopPropagation(); onNext() }} aria-label="Foto siguiente" className="lb-arrow" style={{ ...arrow, right: '1.5rem' }}>→</button>

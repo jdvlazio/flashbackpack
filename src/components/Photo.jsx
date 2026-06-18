@@ -33,7 +33,7 @@ export default function Photo({ photo, alt, onClick }) {
         alt={alt}
         loading="lazy"
         decoding="async"
-        onLoad={e => { setLoaded(true); if (!(photo.w && photo.h) && e.target.naturalWidth) setAr(e.target.naturalWidth / e.target.naturalHeight) }}
+        onLoad={e => { setLoaded(true); const im = e.target; if (!(photo.w && photo.h) && im.naturalWidth) { photo.w = im.naturalWidth; photo.h = im.naturalHeight; setAr(im.naturalWidth / im.naturalHeight) } }}
         onError={() => setErr(true)}
         style={{ opacity: loaded ? 1 : 0 }}
       />
