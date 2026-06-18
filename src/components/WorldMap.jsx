@@ -22,6 +22,7 @@ export default function WorldMap({ onSelect }) {
   const tipRef = useRef(null)
   const zoomRef = useRef(null)
   const draggedRef = useRef(false)
+  const downRef = useRef(null)
   const lastTfRef = useRef(zoomIdentity)
   const pinScaleRef = useRef(1)
 
@@ -62,13 +63,10 @@ export default function WorldMap({ onSelect }) {
     const z = zoom()
       .scaleExtent([1, 24]) // zoom alto: permite separar pares muy juntos (Israel/Palestina)
       .translateExtent([[0, 0], [data.width, data.height]])
-      .on('start', () => { draggedRef.current = false })
       .on('zoom', e => {
         gRef.current.setAttribute('transform', e.transform.toString())
         lastTfRef.current = e.transform
         positionPins(e.transform)
-        const t = e.sourceEvent && e.sourceEvent.type
-        if (t === 'mousemove' || t === 'touchmove' || t === 'pointermove') draggedRef.current = true
       })
     zoomRef.current = z
     const sel = select(svgRef.current)
@@ -102,7 +100,9 @@ export default function WorldMap({ onSelect }) {
     <div id="flashback-map" style={{ opacity: data ? 1 : 0, transition: 'opacity 0.45s ease' }}>
       {data && (
         <svg ref={svgRef} viewBox={`0 0 ${data.width} ${data.height}`} preserveAspectRatio="xMidYMid meet"
-          style={{ width: '100%', height: '100%', display: 'block', background: 'var(--map-bg)', touchAction: 'none', cursor: 'grab' }}>
+          style={{ width: '100%', height: '100%', display: 'block', background: 'var(--map-bg)', touchAction: 'none', cursor: 'grab' }}
+          onPointerDown={e => { downRef.current = [e.clientX, e.clientY] }}
+          onPointerUp={e => { const d = downRef.current; draggedRef.current = !!d && (Math.abs(e.clientX - d[0]) + Math.abs(e.clientY - d[1]) > 8) }}>
           <defs>
             <clipPath id="pinclip"><rect x="-12" y="-19" width="24" height="18" rx="3" /></clipPath>
             <filter id="pinshadow" x="-60%" y="-60%" width="220%" height="220%">
