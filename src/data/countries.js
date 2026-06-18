@@ -47,5 +47,10 @@ export const VISITED = [
 // Orden EXACTO de continentes para el pasaporte (no derivar dinámicamente).
 export const CONTINENT_ORDER = ["Europa","Asia","América","Oceanía"];
 
+// Slug por país para los enlaces por galería (España→espana, Países Bajos→paises-bajos).
+const slugify = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+VISITED.forEach(v => { v.slug = slugify(v.name); });
+export const COUNTRY_BY_SLUG = Object.fromEntries(VISITED.map(v => [v.slug, v]));
+
 // Mapa ADM0_A3 -> código numérico (id de país). Verbatim del baseline.
 export const A3_TO_NUM = {"ESP":"724","FRA":"250","DEU":"276","CHE":"756","CZE":"203","DNK":"208","NOR":"578","SWE":"752","NLD":"528","BEL":"056","HUN":"348","AUT":"040","SVK":"703","ITA":"380","VAT":"336","FIN":"246","RUS":"643","GBR":"826","PRT":"620","TUR":"792","CHN":"156","HKG":"344","VNM":"704","KHM":"116","LAO":"418","THA":"764","KOR":"410","ISR":"376","PSE":"275","IND":"356","NPL":"524","SGP":"702","TWN":"158","COL":"170","MEX":"484","ARG":"032","USA":"840","AUS":"036"};

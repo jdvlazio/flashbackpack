@@ -1,11 +1,20 @@
 import { useState, useEffect } from 'react'
 import { loadPhotos } from './data/photos.js'
+import { COUNTRY_BY_SLUG } from './data/countries.js'
 import Header from './components/Header.jsx'
 import Stats from './components/Stats.jsx'
 import Passport from './components/Passport.jsx'
 import WorldMap from './components/WorldMap.jsx'
 import GalleryModal from './components/GalleryModal.jsx'
 import Lightbox from './components/Lightbox.jsx'
+
+// País a partir de la URL (/espana → país) y metadatos por país.
+const countryFromPath = () => COUNTRY_BY_SLUG[decodeURIComponent(location.pathname.replace(/^\/+|\/+$/g, ''))] || null
+function applyMeta(country) {
+  document.title = country ? `${country.name} — FLASHBACKPACK · Juan David Villa` : 'FLASHBACKPACK — Juan David Villa'
+  const canon = document.querySelector('link[rel="canonical"]')
+  if (canon) canon.setAttribute('href', country ? `https://juanvilla.pics/${country.slug}` : 'https://juanvilla.pics/')
+}
 
 export default function App() {
   const [active, setActive] = useState(null)
@@ -17,13 +26,38 @@ export default function App() {
     loadPhotos(active.country).then(setPhotos)
   }, [active])
 
-  // Atajos de teclado. Depende de `photos`/`lightbox` para navegar sobre la
-  // lista actual (el baseline tenía deps `[]` y las flechas eran no-op).
-  // Escape cierra por capas: primero el lightbox, si no, la galería — así el
-  // foco se restaura por niveles (foto → pasaporte).
+  // Enlaces por galería: abre el país de la URL al cargar, sincroniza con
+  // atrás/adelante (popstate) y refleja la URL al abrir/cerrar.
+  useEffect(() => {
+    const c = countryFromPath()
+    if (c) setActive({ id: c.id, country: c })
+    applyMeta(c)
+    const onPop = () => {
+      const c2 = countryFromPath()
+      setActive(c2 ? { id: c2.id, country: c2 } : null)
+      setLightbox(null)
+      applyMeta(c2)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+
+  // Abrir una galería = navegar a /slug (entra en el historial → "atrás" cierra).
+  const navOpen = sel => {
+    setActive(sel)
+    window.history.pushState({ slug: sel.country.slug }, '', '/' + sel.country.slug)
+    applyMeta(sel.country)
+  }
+  // Cerrar = volver atrás si llegamos abriendo; si se entró directo, ir a la raíz.
+  const navClose = () => {
+    setLightbox(null)
+    if (window.history.state && window.history.state.slug) window.history.back()
+    else { setActive(null); window.history.replaceState(null, '', '/'); applyMeta(null) }
+  }
+
   useEffect(() => {
     const handler = e => {
-      if (e.key === 'Escape') { if (lightbox) setLightbox(null); else setActive(null) }
+      if (e.key === 'Escape') { if (lightbox) setLightbox(null); else navClose() }
       if (e.key === 'ArrowRight') { setLightbox(prev => { if (!prev) return prev; const i = photos.indexOf(prev); return i < photos.length - 1 ? photos[i + 1] : prev }) }
       if (e.key === 'ArrowLeft') { setLightbox(prev => { if (!prev) return prev; const i = photos.indexOf(prev); return i > 0 ? photos[i - 1] : prev }) }
     }
@@ -39,12 +73,12 @@ export default function App() {
       <Header />
       <Stats />
       <div id="main-layout" style={{ display: 'flex', alignItems: 'stretch', position: 'relative' }}>
-        <Passport onSelect={setActive} />
+        <Passport onSelect={navOpen} />
         <div id="map-wrapper" style={{ flex: 1, position: 'relative', minHeight: '500px', background: 'var(--bg)' }}>
-          <WorldMap onSelect={setActive} />
+          <WorldMap onSelect={navOpen} />
         </div>
       </div>
-      {active && <GalleryModal active={active} photos={photos} onClose={() => setActive(null)} onOpenLightbox={setLightbox} />}
+      {active && <GalleryModal active={active} photos={photos} onClose={navClose} onOpenLightbox={setLightbox} />}
       {lightbox && <Lightbox lightbox={lightbox} photos={photos} country={active?.country} onClose={() => setLightbox(null)} onPrev={prev} onNext={next} />}
     </div>
   )

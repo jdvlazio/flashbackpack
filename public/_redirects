@@ -1,0 +1,4 @@
+# SPA fallback: las rutas por país (/espana, /corea-del-sur…) sirven index.html
+# y la app abre la galería correspondiente. Las Functions (/photos, /stats) y los
+# archivos estáticos (/assets, /flags, *.json) tienen prioridad y NO se ven afectados.
+/*    /index.html   200
