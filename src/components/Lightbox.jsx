@@ -73,12 +73,12 @@ export default function Lightbox({ lightbox, photos, country, onClose, onPrev, o
       onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerLeave={endDrag}
     >
       {ar ? (
-        <div className="lb-stage" onClick={e => e.stopPropagation()} style={{ position: 'relative', width: `min(var(--lb-maxw), calc(var(--lb-maxh) * ${ar}))`, aspectRatio: String(ar), overflow: 'hidden', borderRadius: '4px' }}>
+        <div key={lightbox.u} className="lb-stage" onClick={e => e.stopPropagation()} style={{ position: 'relative', width: `min(var(--lb-maxw), calc(var(--lb-maxh) * ${ar}))`, aspectRatio: String(ar), overflow: 'hidden', borderRadius: '4px' }}>
           <img src={lqip} aria-hidden="true" className="lb-layer lb-blur" style={{ opacity: loaded ? 0 : 1 }} />
           <img ref={imgRef} src={full} alt={cap} className="lb-layer" onLoad={() => setLoaded(true)} onClick={toggleZoom} onPointerDown={onPointerDown} style={imgDyn} />
         </div>
       ) : (
-        <img ref={imgRef} src={full} alt={cap} className="lb-img" onClick={toggleZoom} onPointerDown={onPointerDown} onLoad={() => setLoaded(true)} style={imgDyn} />
+        <img key={lightbox.u} ref={imgRef} src={full} alt={cap} className="lb-img" onClick={toggleZoom} onPointerDown={onPointerDown} onLoad={() => setLoaded(true)} style={imgDyn} />
       )}
       <button onClick={e => { e.stopPropagation(); onClose() }} aria-label="Cerrar visor" style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'var(--btn-bg)', border: '0.5px solid var(--line-strong)', color: 'var(--c-muted-2)', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', zIndex: 2 }}>✕</button>
       <button onClick={e => { e.stopPropagation(); onPrev() }} aria-label="Foto anterior" className="lb-arrow" style={{ ...arrow, left: '1.5rem' }}>←</button>
