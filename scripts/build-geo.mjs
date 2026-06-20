@@ -49,6 +49,9 @@ toPath = geoPath(projection)
 const H = Math.ceil(y1 - y0)
 const VISITED_IDS = new Set(VISITED.map(v => v.id))
 const r = n => Math.round(n * 10) / 10
+// Redondea los números del path a 1 decimal (sub-píxel incluso con zoom) → JSON
+// más liviano y parseo más rápido, sin cambio visible.
+const roundPath = d => d && d.replace(/-?\d+\.\d+/g, m => String(Math.round(parseFloat(m) * 10) / 10))
 
 // Colocación del pin = CENTRO VISUAL (polylabel) del polígono MÁS GRANDE del
 // país, proyectado. Garantiza un punto DENTRO de la tierra; el centroide
@@ -78,7 +81,7 @@ const inCountry = (pt, f) => polysOf(f).some(poly => { const proj = projectRings
 
 const countries = features
   .map(f => {
-    const c = { iso: f.properties.iso, name: f.properties.name, cont: CONT_BY_ISO[f.properties.iso] || 'xx', d: toPath(f) }
+    const c = { iso: f.properties.iso, name: f.properties.name, cont: CONT_BY_ISO[f.properties.iso] || 'xx', d: roundPath(toPath(f)) }
     if (VISITED_IDS.has(f.properties.iso)) {
       let pp = pinPoint(f)
       if (!pp) { const [cx, cy] = toPath.centroid(f); if (cx === cx) pp = [r(cx), r(cy)] } // fallback
